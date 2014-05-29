@@ -1,6 +1,7 @@
 /*
  * @author 김승일
  * @email comahead@vi-nyl.com
+ * @version: 0.0.1
  * @description 코어 라이브러리
  * @license MIT License
  * @created date: 2012-03-12
