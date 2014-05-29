@@ -1,0 +1,9 @@
+1. gingerbread: overflow-x, y 안먹는다.
+ - overflow: hidden으로 주고 height를 주는 방법으로 해결
+ 
+2. ios: fixed요소가 있는 페이지에서 폼요소에 포커싱 될 때 fixed가 먹통된다.
+
+3. iscroll사용시, 폼요소가 포커싱된 상태에서 스크롤하면 따라다니지 않는 현상 발생 
+
+
+
