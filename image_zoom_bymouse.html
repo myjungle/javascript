@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+</head>
+<body>
+<div id="box" style="position:relative;width:500px;height:500px;overflow:hidden;background:#ababab;">
+    <img src="http://www.hdwallpapers.in/walls/audi_r8_gt_car-wide.jpg"
+         style="position:absolute;left:0;top:0;width:500px;height:500px">
+</div>
+
+<script>
+    var $box = $('#box'),
+        boxOffset = $box.offset(),
+        $img = $box.children(),
+        boxW = $box.width(),
+        boxH = $box.height(),
+        scale = 0.05,
+        imgWidth = boxW,
+        imgHeight = boxH,
+        imgX = 0,
+        imgY = 0;
+
+    function reset() {
+        imgWidth = boxW;
+        imgHeight = boxH;
+        imgX = imgY = 0;
+        updateImgZoom();
+    }
+
+    function updateImgZoom() {
+        if (imgX > 0) {
+            imgX = 0;
+        } else if (imgX < boxW - imgWidth) {
+            imgX = boxW - imgWidth;
+        }
+
+        if (imgY > 0) {
+            imgY = 0;
+        } else if (imgY < boxH - imgHeight) {
+            imgY = boxH - imgHeight;
+        }
+
+        $img.stop().animate({
+            width: imgWidth,
+            height: imgHeight,
+            left: Math.min(0, imgX),
+            top: Math.min(0, imgY)
+        });
+    }
+
+    $box.on('mousewheel', function (e) {
+        var deltaY = 0;
+        e.preventDefault();
+
+        e = e.originalEvent;
+
+        if (e.deltaY) {
+            deltaY = e.deltaY;
+        } else if (e.wheelDelta) {
+            deltaY = -e.wheelDelta;
+        }
+
+
+        var offsetX = e.pageX - boxOffset.left,
+            offsetY = e.pageY - boxOffset.top,
+
+            mouseX = offsetX - imgX,
+            mouseY = offsetY - imgY,
+
+            ratioX = mouseX / imgWidth,
+            ratioY = mouseY / imgHeight;
+
+        if (deltaY < 0) {
+            imgWidth += imgWidth * scale;
+            imgHeight += imgHeight * scale;
+        } else {
+            imgWidth -= imgWidth * scale;
+            imgHeight -= imgHeight * scale;
+        }
+
+        imgX = offsetX - (imgWidth * ratioX);
+        imgY = offsetY - (imgHeight * ratioY);
+
+        if (imgWidth <= boxW || imgHeight <= boxH) {
+            reset();
+        } else {
+            updateImgZoom();
+        }
+    }).on('click', function(e) {
+
+        var offsetX = e.pageX - boxOffset.left,
+            offsetY = e.pageY - boxOffset.top,
+
+            mouseX = offsetX - imgX,
+            mouseY = offsetY - imgY,
+
+            ratioX = mouseX / imgWidth,
+            ratioY = mouseY / imgHeight,
+
+            distX = imgWidth,
+            distY = imgHeight;
+
+        imgWidth = imgWidth * 1.4;
+        distX = imgWidth - distX;
+        imgX = imgX - (distX * ratioX) + (250 - offsetX);
+
+        imgHeight = imgHeight * 1.4;
+        distY = imgHeight - distY;
+        imgY = imgY - (distY * ratioY) + (250 - offsetY);
+
+        console.log(imgX, imgY);
+
+
+        if (imgWidth <= boxW || imgHeight <= boxH) {
+            reset();
+        } else {
+            updateImgZoom();
+        }
+    });
+
+</script>
+</body>
+</html>
