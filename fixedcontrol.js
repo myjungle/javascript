@@ -15,17 +15,17 @@
 				me.$offsetTarget = $(me.options.offsetTarget);
 			}
 
-			me.winHeight = emart.util.getWinHeight();
-			me.winWidth = emart.util.getWinWidth();
-			me.scrollTop = emart.$win.scrollTop();
-			me.scrollLeft = emart.$win.scrollLeft();
+			me.winHeight = core.util.getWinHeight();
+			me.winWidth = core.util.getWinWidth();
+			me.scrollTop = core.$win.scrollTop();
+			me.scrollLeft = core.$win.scrollLeft();
 			me._bindEvents();
 			me._reposition();
 		},
 		_bindEvents: function() {
 			var me = this,
-				$win = emart.$win,
-				util = emart.util;
+				$win = core.$win,
+				util = core.util;
 
 			$win.on('resize.'+me.cid, function() {
 				me.winHeight = $win.innerHeight(); //util.getWinHeight();
@@ -40,8 +40,8 @@
 
 		_reposition: function() {
 			var me = this,
-				$win = emart.$win,
-				util = emart.util,
+				$win = core.$win,
+				util = core.util,
 				opts = me.options,
 
 				docHeight = util.getDocHeight(),
