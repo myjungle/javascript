@@ -2,11 +2,10 @@
  * @author: 김승일
  * @email: comahead@nate.com
  */
-!(function () {
+!(function ($, core, ui, undefined) {
     "use strict";
 
     var idx = 0, // 고유 시퀀스 용도
-        core = jint,
         nextIdx = function () {
             return idx++;
         },
@@ -17,7 +16,7 @@
      * 배열을 좀더 쉽게 관리하기 위한 배열래퍼
      * @class
      * @name ArrayList
-     * @extends jint.Base
+     * @extends jCore.Base
      */
     var ArrayList = core.Base.extend(/**@lends ArrayList */{
         $mixins: [core.Listener], // 해당 클래스에서 이벤트를 사용할 수 있도록 지정,
@@ -520,7 +519,7 @@
      * @class
      * @extends ui.View
      */
-    var AudioPlayer = ui('JintAudioPlayer', {
+    var AudioPlayer = ui('AudioPlayer', {
         defaults: {
             mediaType: 'audio/mp3',         // 기본 미디어 타입
             shuffle: false,                 // 섞기 여부
@@ -1033,5 +1032,5 @@
     });
 
 
-})();
+})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
