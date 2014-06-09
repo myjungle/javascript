@@ -903,6 +903,10 @@
             me.enables(false);
             me._setTrackInfo({});
         },
+        
+        getTracks: function() {
+            return this.tracks;  
+        },
 
         /**
          * src 설정
