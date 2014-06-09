@@ -206,7 +206,7 @@
 
 })(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
-var map = new emart.ui.NaverMap('#map');
+var map = new window[LIB_NAME].ui.NaverMap('#map');
 map.addMarkers([{x:37.5679451, y:126.9777356, title: '청담점', areaId: 123},
 						 {x:37.5675451, y:126.9773356, title: '성수점', areaId: 623},
 						 {x:37.5675451, y:126.9773356, title: '성수점', areaId: 623},
