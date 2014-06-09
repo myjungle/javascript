@@ -6,7 +6,6 @@
     "use strict";
 
     var idx = 0, // 고유 시퀀스 용도
-        core = emart,
         nextIdx = function () {
             return idx++;
         },
@@ -17,7 +16,7 @@
      * 배열을 좀더 쉽게 관리하기 위한 배열헬퍼
      * @class
      * @name ArrayList
-     * @extends emart.Base
+     * @extends jCore.Base
      */
     var ArrayList = core.Base.extend(/**@lends ArrayList */{
         $mixins: [core.Listener], // 해당 클래스에서 이벤트를 사용할 수 있도록 지정
@@ -451,8 +450,8 @@
      * @class
      * @extends ui.View
      */
-    var AudioPlayer = ui('EmartAudioPlayer', /**@lends EmartAudioPlayer*/{
-        bindjQuery: 'emartAudioPlayer',
+    var AudioPlayer = ui('AudioPlayer', /**@lends AudioPlayer*/{
+        bindjQuery: 'audioPlayer',
         defaults: {
             mediaType: 'audio/mp3',         // 기본 미디어 타입
             shuffle: false,                 // 섞기 여부
@@ -869,7 +868,7 @@
     });
 
 
-    window.EmartAudioPlayer = AudioPlayer;
+    window.AudioPlayer = AudioPlayer;
 })(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
 
