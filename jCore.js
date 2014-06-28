@@ -1,10 +1,9 @@
 /*
  * @author 김승일
- * @email comahead@nate.com
- * @version: 0.0.1
- * @description 제이코어 라이브러리
+ * @email comahead@vi-nyl.com
+ * @description 코어 라이브러리
  * @license MIT License
- * @created date: 2012-03-12
+ *
  *
  * @Searching List
  * @jQuery
@@ -18,9 +17,10 @@
  *      .activeItem() : 이전에 추가된 'on'를 지우고 현재 요소에 'on'클래스를 삽입
  *      .trimVal() : 폼요소의 값에서 앞뒤 스페이스를 제거한 값을 반환
  *      .buildUIControls() : 요소에 포함된 공통 UI모듈을 빌드
+ *		.toggleLayer()
  *
  *
- * @Core : 코어
+ * @Core : 코어 함수
  * jCore
  *          .$win : $(window)
  *          .$doc : $(document)
@@ -28,23 +28,23 @@
  *          .each() : 반복자
  *          .extend() :  속성 복사
  *          .namespace() : 네임스페이스 생성
- *          .ns() : namespace() 별칭 
  *          .define() : jCore를 루트로 한 네임스페이스 생성
- *          .hasOwn() : Object.prototype.hasOwnProperty 
+ *          .hasOwn() : Object.prototype.hasOwnProperty 단축명
  *          .is() : 타입 체크
  *          .isEmpty() : 빈값 체크
- *			.isString()
- *			.isArray()
- *			.isFunction()
- *			.isDate()
- *			.isNumber()
+ *			 .isString()
+ *			 .isArray()
+ *			 .isFunction()
+ *			 .isDate()
+ *			 .isNumber()
  *          .toArray() : 주어진 값을 배열로 변환
  *          .getUniqId() : 고유값 생성(32자리)
  *          .nextSeq() : 0에서 1씩 증가시킨 순번을 반환
  *          .template() : 템플릿 생성
- *			.loadjs() : js 동적 로드
+ *			 .loadScript() : js 동적 로드
+ *			 .require() : loadScript 별칭
  *          .Class() : OOP 클래스 정의함수
- *          .Base : OOP Root 클래스
+ *          .Base : OOP 클래스의 Root
  *
  *
  * @Browser : 브라우저 정보
@@ -64,7 +64,7 @@
  *          .isGecko    : 파폭
  *          .isMac      : 맥 OS
  *          .isAir      : Adobe Air
- *          .isIDevice  : 모바일 디바이스
+ *          .isIOS  : 모바일 디바이스
  *          .isSafari   : 사파리
  *          .isIETri4   : 쿼크
  *
@@ -81,6 +81,7 @@
  *			.weekOfYear(...)
  *			.isLeafYear(...)
  *			.add(...)
+ *			.diffMonths(...)
  *
  * @string
  * jCore.string
@@ -98,7 +99,7 @@
  *			.unescapeHTML(...)
  *			.toggle(...)
  *			.format(...)
- *`			.sprintf(...)
+ *`		.sprintf(...)
  *			.stripTags(...)
  *			.stripSctipts(...)
  *
@@ -156,23 +157,23 @@
  *          .getDocWidth(...)        : 도큐먼트 width
  *          .getWinWidth(...)        : 윈도우 width
  *          .getWinHeight(...)       : 윈도우 height
- *			.scrollTopAnimate(...)	 : 스크롤 애니메이션
+ *			 .scrollTopAnimate(...)	 : 스크롤 애니메이션
  *
  *
  * @UI : UI 모듈
  * jCore.ui
- * 		    .AccordionList             : 아코디언 리스트
- * 		    .Calendar                  : 달력
- * 	        .Modal                     : 모달
- * 	        .ajaxModal                 : ajax 모달
- * 	        .alert                     : 모달 alert
+ * 		 .AccordionList             : 아코디언 리스트
+ * 		 .Calendar                  : 달력
+ * 	     .Modal                     : 모달
+ * 	     .ajaxModal                 : ajax 모달
+ * 	     .alert                     : 모달 alert
  *          .Paginate                  : 페이지네이션
  *          .Placeholder               : 플레이스홀더
  *          .ScrollView                : 커스텀스크롤
  *          .Selectbox                 : 스킨형 셀렉트박스
  *          .Slider                    : 슬라이더
  *          .Tab                       : 탭컨트롤
- *			.AjaxList				   : ajax 리스트
+ *			 .AjaxList				   : ajax 리스트
  *	
  */
 (function (context, $, undefined) {
@@ -185,7 +186,7 @@
     }
 
     var LIB_NAME = window.LIB_NAME = 'jCore';
-    
+
     var $root = $(document.documentElement).addClass('js');
     ('ontouchstart' in context) && $root.addClass('touch');
     ('orientation' in context) && $root.addClass('mobile');
@@ -195,8 +196,7 @@
      * @name jCore
      * @description root namespace of hib site
      */
-    var _core = context[ LIB_NAME ] || (context[ LIB_NAME ] = {});
-
+    var core = context[ LIB_NAME ] || (context[ LIB_NAME ] = {});
     var arrayProto = Array.prototype,
         objectProto = Object.prototype,
         toString = objectProto.toString,
@@ -333,9 +333,10 @@
             throw new Error('oops!! clone is fail');
         };
 
-    _core.name = LIB_NAME;
 
-    extend(_core, {
+    extend(core, {
+        name: LIB_NAME,
+        debug: false,
         /**
          * document jQuery wrapper
          */
@@ -456,15 +457,25 @@
         }
     });
 
-	// TODO: 뺄 것
-	var oldOff = $.fn.off;
-	$.fn.unbind = $.fn.off = function(name) {
-		if((this[0] === window || this[0] === document)
+    // TODO: 뺄 것
+    var oldOff = $.fn.off;
+    $.fn.unbind = $.fn.off = function(name) {
+        if((this[0] === window || this[0] === document)
             && name !== 'ready' && name.indexOf('.') < 0) {
-			throw new Error('['+name+'] window, document에서 이벤트를 off할 때는 네임스페이스를 꼭 넣어주셔야 합니다.');
-		}
-		return oldOff.apply(this, arguments);
-	};
+            throw new Error('['+name+'] window, document에서 이벤트를 off할 때는 네임스페이스를 꼭 넣어주셔야 합니다.');
+        }
+        return oldOff.apply(this, arguments);
+    };
+    if(core.debug === true) {
+        var oldOn = $.fn.on;
+        $.fn.on = function() {
+            if(arguments.length === 3) {
+                console.log('Bubble binding...', this[0].tagName, arguments[0], arguments[1]);
+                console.trace();
+            }
+            return oldOn.apply(this, arguments);
+        };
+    }
 
     /**
      * value값을 URI인코딩하여 반환
@@ -489,21 +500,54 @@
     $.fn.trimVal = (function() {
         var supportPlaceholder = ('placeholder' in tmpInput);
 
-        return supportPlaceholder ? function(value) {
-            if (arguments.length === 0) { return $.trim(this.val()); }
-            else { return this.val($.trim(value)); }
-        } : function(value) {
-            if (arguments.length === 0) {
-                if (this.val() === this.attr('placeholder')) {
-                    return '';
-                }
-                return $.trim(this.val());
+        return  function(value) {
+            if(supportPlaceholder && !this.attr('ori-placeholder')){
+                if (arguments.length === 0) { return $.trim(this.val()); }
+                else { return this.val($.trim(value)); }
             } else {
-                value = $.trim(value) || this.attr('placeholder');
-                return this.val(value);
+                var txtPlaceholder = this.attr('placeholder') || this.attr('ori-placeholder');
+                if (arguments.length === 0) {
+                    if (this.val() === txtPlaceholder.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n")) {
+                        return '';
+                    }
+                    return $.trim(this.val());
+                } else {
+                    value = $.trim(value) || txtPlaceholder;
+                    return this.val(value);
+                }
             }
         };
+        /*return supportPlaceholder ? function(value) {
+         if (arguments.length === 0) { return $.trim(this.val()); }
+         else { return this.val($.trim(value)); }
+         } : function(value) {
+         var txtPlaceholder = this.attr('placeholder') || this.attr('ori-placeholder');
+         if (arguments.length === 0) {
+         if (this.val() === txtPlaceholder) {
+         return '';
+         }
+         return $.trim(this.val());
+         } else {
+         value = $.trim(value) || txtPlaceholder;
+         return this.val(value);
+         }
+         };*/
+
     })();
+
+    $.fn.toggleLayer = function() {
+        return this.each(function() {
+            var $el = $(this),
+                $target = $( $el.attr('data-target') || $el.attr('href') );
+
+            $el.on('click', function(e) {
+                e.preventDefault();
+
+                $target.toggle(!$target.is(':visible'));
+            });
+        });
+    };
+
 
     /**
      * 체크여부를 지정할 때, changed 이벤트를 발생시킨다.(연결된 label에 on클래스를 토글링하고자 할 때 사용)
@@ -558,7 +602,7 @@
      */
     $.fn.showLayer = function(options, isBubble) {
         options = extend({
-            onShow: _core.emptyFn,
+            onShow: core.emptyFn,
             opener: null
         }, options);
 
@@ -593,7 +637,7 @@
      */
     $.fn.hideLayer = function(options, isBubble) {
         options = extend({
-            onHide: _core.emptyFn,
+            onHide: core.emptyFn,
             focusOpener: false
         }, options);
 
@@ -648,9 +692,9 @@
      * @param {String} cls 활성 클래스명
      * @return {jQuery}
      */
-    $.fn.activeItem = function(cls) {
+    $.fn.activeItem = function(cls, isReverse) {
         cls = cls || 'on';
-        return this.addClass(cls).siblings().removeClass(cls).end();
+        return this[isReverse?'removeClass':'addClass'](cls).siblings()[isReverse?'addClass':'removeClass'](cls).end();
     };
 
     /**
@@ -664,7 +708,7 @@
     $.fn.disabled = function(name, flag) {
         if(typeof name !== 'string') {
             flag = name;
-            name = 'disable';
+            name = 'disabled';
         }
         return this.prop('disabled', flag).toggleClass(name, flag);
     };
@@ -682,27 +726,27 @@
             var $el = $(this);
 
             switch(e.type) {
-				case 'click':
-					var isChecked = $el.prop('checked'),
-						id;
-					$el.siblings('label').toggleClass('on', isChecked);
-					if($el.is(':radio')) {
-						$($el[0].form[$el.attr('name')]).not(this).removeClass('on');
-					}
-					break;
-				case 'focusin':
-				case 'focusout':
-					/*if(id = $el.attr('id')){
-						$('#'+id).toggleClass('focus', e.type === 'focusin');
-					}*/
-					$el.siblings('label').toggleClass('focus', e.type === 'focusin');
-					break;
-			}
+                case 'click':
+                    var isChecked = $el.prop('checked'),
+                        id;
+                    $el.siblings('label').toggleClass('on', isChecked);
+                    if($el.is(':radio')) {
+                        $($el[0].form[$el.attr('name')]).not(this).removeClass('on');
+                    }
+                    break;
+                case 'focusin':
+                case 'focusout':
+                    /*if(id = $el.attr('id')){
+                     $('#'+id).toggleClass('focus', e.type === 'focusin');
+                     }*/
+                    $el.siblings('label').toggleClass('focus', e.type === 'focusin');
+                    break;
+            }
         });
         return this;
     };
 
-    extend(_core, /** @lends jCore */{
+    extend(core, /** @lends jCore */{
         /**
          * timeStart("name")로 name값을 키로하는 타이머가 시작되며, timeEnd("name")로 해당 name값의 지난 시간을 로그에 출력해준다.
          *
@@ -780,7 +824,7 @@
      * jCore.ui = jCore.ui || {};
      * jCore.widget.Control = jCore.widget.Control || function() {};
      */
-    _core.namespace = function (name, obj) {
+    core.namespace = function (name, obj) {
         if (typeof name !== 'string') {
             obj && (name = obj);
             return name;
@@ -790,21 +834,21 @@
             isSet = arguments.length === 2,
             i, item;
 
-        if (isSet) {
-            for(i = -1; item = names[++i]; ) {
-                root = root[item] || (root[item] = (i === names.length - 1 ? obj : {}));
-            }
-        } else { // isGet
-            for(i = -1; item = names[++i]; ) {
-                if (item in root) { root = root[item] }
-                else { throw Error(name + '은(는) 정의되지 않은 네임스페이스입니다.'); }
-            }
+        // if (isSet) {
+        for(i = -1; item = names[++i]; ) {
+            root = root[item] || (root[item] = (i === names.length - 1 ? obj : {}));
         }
+        /* } else { // isGet
+         for(i = -1; item = names[++i]; ) {
+         if (item in root) { root = root[item] }
+         else { throw Error(name + '은(는) 정의되지 않은 네임스페이스입니다.'); }
+         }
+         } */
 
         return root;
     };
 
-    _core.ns = _core.namespace;
+    core.ns = core.namespace;
 
     /**
      * common를 루트로 하여 네임스페이스를 생성하여 새로운 속성을 추가하는 함수
@@ -820,12 +864,12 @@
      * jCore.define('', [], {});
      * jCore.
      */
-    _core.define = function (name, object, isExecFn) {
+    core.define = function (name, object, isExecFn) {
         if (typeof name !== 'string') {
             object = name; name = '';
         }
 
-        var root = _core,
+        var root = core,
             names = name ? name.replace(/^_core\.?/, '').split('.') : [],
             ln = names.length - 1,
             leaf = names[ln];
@@ -841,9 +885,9 @@
         return (leaf && (root[leaf] ? extend(root[leaf], object) : (root[leaf] = object))) || extend(root, object), object;
     };
 
-    _core._prefix = LIB_NAME + '.';
+    core._prefix = LIB_NAME + '.';
 
-    _core.define(/** @lends jCore */ {
+    core.define(/** @lends jCore */ {
         /**
          * 현재 url 반환(쿼리스트링, # 제외)
          * @returns {string}
@@ -890,7 +934,7 @@
                 win = context,
                 na = win.navigator,
                 ua = na.userAgent,
-				lua = ua.toLowerCase(),
+                lua = ua.toLowerCase(),
                 match;
 
             detect.isMobile = typeof orientation !== 'undefined';
@@ -911,16 +955,19 @@
             detect.isGecko = (ua.indexOf('Firefox') !==-1);
             detect.isMac = (ua.indexOf('Mac') !== -1);
             detect.isAir = ((/adobeair/i).test(ua));
-            detect.isIDevice = /(iPad|iPhone)/.test(ua);
+            detect.isIOS = /(iPad|iPhone)/.test(ua);
             detect.isSafari = !detect.isChrome && (/Safari/).test(ua);
             detect.isIETri4 = (detect.isIE && ua.indexOf('Trident/4.0') !== -1);
 
             detect.msPointer = na.msPointerEnabled && na.msMaxTouchPoints && !win.PointerEvent;
             detect.pointer = (win.PointerEvent && na.pointerEnabled && na.maxTouchPoints) || detect.msPointer;
-			detect.isNotSupporte3DTransform = /android 2/i.test(lua);
-			detect.isGingerbread = /android 2.3/i.test(lua);
-			detect.isIcecreamsandwith = /android 4.0/i.test(lua);
-			return detect;
+
+            detect.isNotSupporte3DTransform = /android 2/i.test(lua);
+            detect.isGingerbread = /android 2.3/i.test(lua);
+            detect.isIcecreamsandwith = /android 4.0/i.test(lua);
+
+            detect.androidVersion = (function(match){ return match[1]|0; })(/android ([\w.]+)/.test(lua));
+            return detect;
         }()),
 
         is: function (o, typeName) {
@@ -955,7 +1002,7 @@
          * @return {Boolean}
          */
         isEmpty: function (value, allowEmptyString) {
-            return (value === null) || (value === undefined) || (!allowEmptyString ? value === '' : false) || (this.is(value, 'array') && value.length === 0);
+            return (value === null) || (value === undefined) || (!allowEmptyString ? value === '' : false) || (core.is(value, 'array') && value.length === 0);
         },
 
         /**
@@ -1132,7 +1179,7 @@
          * @return {Function} tempalte 함수
          *
          * @example
-         * var tmpl = jCore.template('&lt;span>&lt;%=name%>&lt;/span>');
+         * var tmpl = jCore.template('&lt;span>&lt;$=name$>&lt;/span>');
          * var html = tmpl({name: 'Axl rose'}); => &lt;span>Axl rose&lt;/span>
          * $('div').html(html);
          */
@@ -1141,12 +1188,12 @@
                 src = 'var __src = [], each='+LIB_NAME+'.each, escapeHTML='+LIB_NAME+'.string.escapeHTML; with(value||{}) { __src.push("';
             str = $.trim(str);
             src += str.replace(/\r|\n|\t/g, " ")
-                .replace(/<%(.*?)%>/g, function(a, b) { return '<%' + b.replace(/"/g, '\t') + '%>'; })
+                .replace(/<\$(.*?)\$>/g, function(a, b) { return '<$' + b.replace(/"/g, '\t') + '$>'; })
                 .replace(/"/g, '\\"')
-                .replace(/<%(.*?)%>/g, function(a, b) { return '<%' + b.replace(/\t/g, '"') + '%>'; })
-                .replace(/<%=(.+?)%>/g, '", $1, "')
-                .replace(/<%-(.+?)%>/g, '", escapeHTML($1), "')
-                .replace(/(<%|%>)/g, function(a, b) { return b === '<%' ? '");' : '__src.push("'});
+                .replace(/<\$(.*?)\$>/g, function(a, b) { return '<$' + b.replace(/\t/g, '"') + '$>'; })
+                .replace(/<\$=(.+?)\$>/g, '", $1, "')
+                .replace(/<\$-(.+?)\$>/g, '", escapeHTML($1), "')
+                .replace(/(<\$|\$>)/g, function(a, b) { return b === '<$' ? '");' : '__src.push("'});
 
             src+='"); }; return __src.join("")';
 
@@ -1160,47 +1207,40 @@
         /**
          * js파일을 동적으로 로딩
          * @function
-         * @name loadjs
+         * @name loadScript
          * @param {Array} scriptList 로딩할 js파일 리스트
          * @param {Function} callback 주어진 js파일들의 로딩이 모두 완료가 되었을 때 실행할 콜백함수
          */
-        loadjs: (function () {
+        loadScript: (function () {
             // benchmark: https://github.com/eancc/seque-loadjs/blob/master/seque-loadjs.js
 
             var loadedjs = {},
-				core = _core;
+                core = core;
 
-            return function(scriptList, callback) {
+            return function(scriptList, cb) {
                 var args = arraySlice.call(arguments),
-					callbackArgs = args.slice(2),
-					len = scriptList.length,
-					loadedLen = 0,
-					defer = $.Deferred();
-					
-				callback = function() {
-					if(callback) {
-						callback.call(null, arguments);
-					}
-					defer.resolve.apply(defer, arguments);
-				};
+                    callbackArgs = args.slice(2),
+                    len = scriptList.length,
+                    loadedLen = 0,
+                    defer = $.Deferred();
 
-                if (scriptList instanceof Array) {
-                    return loadScripts();
-                } else if (typeof (scriptList) == "string") {
-                    return loadScript(scriptList, function() {
-						if(callback){
-							callback.apply(null, callbackArgs);
-						}
-					});
-                }
+                // 이미 포함된 스크립트를 검색
+                $('script').each(function() {
+                    loadedjs[$(this).attr('src')] = true;
+                });
 
-                function deepCallbacks(callback, func, args) {
+                function callback() {
+                    if(cb) {
+                        cb.apply(null, callbackArgs);
+                    }
+                    defer.resolve.apply(null, callbackArgs);
+                };
+
+                function deepCallbacks(incallback, func, args) {
                     if (func) {
                         func.apply(null, args);
                     }
-                    if (callback) {
-                        callback();
-                    }
+                    incallback();
                 }
 
                 //
@@ -1211,12 +1251,13 @@
                         callback.apply(null, callbackArgs);
                     }
                 }
+                //////////
 
                 // load
-                function loadScript(scriptName, callback) {
+                function loadScript(scriptName, incallback) {
 
                     if (scriptName instanceof Array) {
-                        callback = deepCallbacks(callback, scriptName[1], scriptName.slice(2));
+                        incallback = deepCallbacks(incallback, scriptName[1], scriptName.slice(2));
                         scriptName = scriptName[0];
                     }
                     //캐쉬
@@ -1224,7 +1265,7 @@
                         loadedjs[scriptName] = true;
 
                         var body = document.getElementsByTagName('body')[0],
-							script = document.createElement('script');
+                            script = document.createElement('script');
 
                         script.type = 'text/javascript';
                         script.src = scriptName;
@@ -1233,24 +1274,33 @@
                             script.onreadystatechange = function() {
                                 if (script.readyState === "loaded" || script.readyState === "complete") {
                                     script.onreadystatechange = null;
-                                    if (callback) {
-                                        callback();
-                                    }
+                                    incallback();
                                 }
                             };
                         } else {
-                            script.onload = callback;
+                            script.onload = incallback;
                         }
 
                         body.appendChild(script);
-                    } else if (callback) {
-                        callback();
+                    } else if (incallback) {
+                        incallback();
                     }
                 }
+                ////////////
+
+                if (scriptList instanceof Array) {
+                    loadScripts();
+                } else if (typeof (scriptList) == "string") {
+                    loadScript(scriptList, function() {
+                        callback.apply(null, callbackArgs);
+                    });
+                }
+                return defer.promise();
             };
 
         })()
     });
+    core.require = core.loadScript;
 
     /**
      * 문자열 관련 유틸 함수 모음
@@ -1259,7 +1309,7 @@
      * @name jCore.string
      * @description
      */
-    _core.define('string', function () {
+    core.define('string', function () {
         var escapeChars = {
                 '&': '&amp;',
                 '>': '&gt;',
@@ -1484,16 +1534,17 @@
              * jCore.string.format("{0}:{1}:{2} {0}", "a", "b", "c");  => "a:b:c a"
              */
             format: function (format, val) {
-                var args = _core.toArray(arguments).slice(1);
+                var args = core.toArray(arguments).slice(1),
+                    isJson = core.isPlainObject(val);
 
                 return format.replace(/\{([0-9a-z]+)\}/ig, function (m, i) {
-                    return (i in val) ? val[i] : args[i] || '';
+                    return isJson ? val[i] : args[i] || '';
                 });
             },
 
             sprintf: (function() {
                 var re = /%%|%(?:(\d+)[\$#])?([+-])?('.|0| )?(\d*)(?:\.(\d+))?([bcdfosuxXhH])/g,
-                    core = _core;
+                    core = core;
 
                 var s = function() {
                     var args = [].slice.call(arguments, 1);
@@ -1576,7 +1627,7 @@
      * @name jCore.uri
      * @description
      */
-    _core.define('uri', /** @lends jCore.uri */{
+    core.define('uri', /** @lends jCore.uri */{
 
         /**
          * 주어진 url에 쿼리스츠링을 조합
@@ -1590,10 +1641,10 @@
          * jCore.uri.urlAppend("board.do?id=123", {"a":1, "b": 2, "c": {"d": 4}}); => "board.do?id=123&a=1&b=2&c[d]=4"
          */
         urlAppend: function (url, string) {
-            if (_core.is(string, 'object')) {
-                string = _core.object.toQueryString(string);
+            if (core.is(string, 'object')) {
+                string = core.object.toQueryString(string);
             }
-            if (!_core.isEmpty(string)) {
+            if (!core.isEmpty(string)) {
                 return url + (url.indexOf('?') === -1 ? '?' : '&') + string;
             }
 
@@ -1674,7 +1725,7 @@
          * jCore.uri.removeHash("list.do#comment"); => "list.do"
          */
         removeHash: function (url) {
-            return url ? url.replace(/.*(?=#[^\s]+$)/, '') : url;
+            return url ? url.replace(/#.*$/, '') : url;
         }
     });
 
@@ -1685,7 +1736,7 @@
      * @name jCore.number
      * @description
      */
-    _core.define('number', /** @lends jCore.number */{
+    core.define('number', /** @lends jCore.number */{
         /**
          * 주어진 수를 자릿수만큼 앞자리에 0을 채워서 반환
          *
@@ -1765,7 +1816,7 @@
             return value;
         }
     });
-	_core.number.pad = _core.number.zeroPad;
+    core.number.pad = core.number.zeroPad;
 
     function nativeCall(f) {
         return f ? function(obj) {
@@ -1777,7 +1828,7 @@
      * @namespace
      * @name jCore.array
      */
-    _core.define('array', /** @lends jCore.array */{
+    core.define('array', /** @lends jCore.array */{
         /**
          * 배열 병합
          * @param {Array, Array, ...} arr
@@ -1806,7 +1857,7 @@
          */
         map: nativeCall(arrayProto.map) || function (obj, cb, ctx) {
             var results = [];
-            if (!_core.is(obj, 'array') || !_core.is(cb, 'function')) { return results; }
+            if (!core.is(obj, 'array') || !core.is(cb, 'function')) { return results; }
             // vanilla js~
             for(var i =0, len = obj.length; i < len; i++) {
                 results[results.length] = cb.call(ctx||obj, obj[i], i, obj);
@@ -1822,7 +1873,7 @@
          */
         every: nativeCall(arrayProto.every) || function(arr, cb, ctx) {
             var isTrue = true;
-            if (!_core.is(arr, 'array') || !_core.is(cb, 'function')) { return isTrue; }
+            if (!core.is(arr, 'array') || !core.is(cb, 'function')) { return isTrue; }
             each(arr, function(v, k) {
                 if (cb.call(ctx||this, v, k) !== true) {
                     return isTrue = false, false;
@@ -1838,7 +1889,7 @@
          */
         any: nativeCall(arrayProto.any) || function(arr, cb, ctx) {
             var isTrue = false;
-            if (!_core.is(arr, 'array') || !_core.is(cb, 'function')) { return isTrue; }
+            if (!core.is(arr, 'array') || !core.is(cb, 'function')) { return isTrue; }
             each(arr, function(v, k) {
                 if (cb.call(ctx||this, v, k) === true) {
                     return isTrue = true, false;
@@ -1857,7 +1908,7 @@
             var rand,
                 index = 0,
                 shuffled = [],
-                number = _core.number;
+                number = core.number;
 
             each(obj, function (value, k) {
                 rand = number.random(index++);
@@ -1883,7 +1934,7 @@
          */
         filter: nativeCall(arrayProto.filter) || function (obj, cb, ctx) {
             var results = [];
-            if (!_core.is(obj, 'array') || !_core.is(cb, 'function')) { return results; }
+            if (!core.is(obj, 'array') || !core.is(cb, 'function')) { return results; }
             for(var i =0, len = obj.length; i < len; i++) {
                 cb.call(ctx||obj, obj[i], i, obj) && (results[results.length] = obj[i]);
             }
@@ -1901,16 +1952,16 @@
          * jCore.array.include([1, '일', 2, '이', 3, '삼'], '삼');  => true
          */
         include: function (arr, value, b) {
-            if (!_core.is(arr, 'array')) { return value; }
-			if(typeof value === 'function') {
-				for(var i = 0; i<arr.length; i++) {
-					if(value(arr[i], i) === true){
-						return true;
-					}
-				}
-				return false;
-			}
-            return _core.array.indexOf(arr, value, b) > -1;
+            if (!core.is(arr, 'array')) { return value; }
+            if(typeof value === 'function') {
+                for(var i = 0; i<arr.length; i++) {
+                    if(value(arr[i], i) === true){
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return core.array.indexOf(arr, value, b) > -1;
         },
 
         /**
@@ -1939,7 +1990,7 @@
          * @return {Array} 지정한 요소가 삭제된 배열
          */
         removeAt: function (value, index) {
-            if (!_core.is(value, 'array')) { return value; }
+            if (!core.is(value, 'array')) { return value; }
             value.splice(index, 1);
             return value;
         },
@@ -1953,19 +2004,19 @@
          * @return {Array} 지정한 요소가 삭제된 배열
          */
         remove: function (value, iter) {
-            if (!_core.is(value, 'array')) { return value; }
-			if(typeof iter === 'function'){
-				for(var i = value.length, item; item = value[--i]; ){
-					if(iter(item, i) === true){
-						value = this.removeAt(value, i);
-					}
-				}
-				return value;
-			} else {
-				var index = this.indexOf(value, iter);
-				if(index < 0) { return value; }
-				return this.removeAt(value, index);
-			}
+            if (!core.is(value, 'array')) { return value; }
+            if(typeof iter === 'function'){
+                for(var i = value.length, item; item = value[--i]; ){
+                    if(iter(item, i) === true){
+                        value = this.removeAt(value, i);
+                    }
+                }
+                return value;
+            } else {
+                var index = this.indexOf(value, iter);
+                if(index < 0) { return value; }
+                return this.removeAt(value, index);
+            }
         },
 
         /**
@@ -1986,6 +2037,21 @@
          */
         min: function( array ) {
             return Math.min.apply( Math, array );
+        },
+
+        reverse: nativeCall(arrayProto.reverse) || function(array) {
+            var first = null;
+            var last = null;
+            var tmp = null;
+            var length = array.length;
+
+            for (first = 0, last = length - 1; first < length / 2; first++, last--) {
+                tmp = array[first];
+                array[first] = array[last];
+                array[last] = tmp;
+            }
+
+            return array;
         }
     });
 
@@ -1994,7 +2060,7 @@
      * @namespace
      * @name jCore.object
      */
-    _core.define('object', /** @lends jCore.object */{
+    core.define('object', /** @lends jCore.object */{
 
         /**
          * 개체의 열거가능한 속성 및 메서드 이름을 배열로 반환
@@ -2046,7 +2112,7 @@
          * => {1: 'one__', 2: 'two__', 3: 'three__'}
          */
         map: function(obj, cb) {
-            if (!_core.is(obj, 'object') || !_core.is(cb, 'function')) { return obj; }
+            if (!core.is(obj, 'object') || !core.is(cb, 'function')) { return obj; }
             var results = {};
             each(obj, function(v, k) {
                 results[k] = cb(obj[k], k, obj);
@@ -2062,7 +2128,7 @@
          * @return {Boolean} 요소가 하나라도 있는지 여부
          */
         hasItems: function (obj) {
-            if (!_core.is(obj, 'object')) {
+            if (!core.is(obj, 'object')) {
                 return false;
             }
 
@@ -2137,80 +2203,80 @@
          * @return 지정한 요소가 삭제된 리터럴
          */
         remove: function (value, key) {
-            if (!_core.is(value, 'object')) { return value; }
+            if (!core.is(value, 'object')) { return value; }
             value[key] = null;
             delete value[key];
             return value;
         },
 
-		stringify: function (val, opts, pad) {
-			var cache = [];
+        stringify: function (val, opts, pad) {
+            var cache = [];
 
-			return (function stringify(val, opts, pad) {
-				var objKeys;
-				opts = $.extend({}, {
-					singleQuotes: false,
-					indent: '', // '\t'
-					nr: '', // '\n'
-				}, opts);
-				pad = pad || '';
+            return (function stringify(val, opts, pad) {
+                var objKeys;
+                opts = $.extend({}, {
+                    singleQuotes: false,
+                    indent: '', // '\t'
+                    nr: '' // '\n'
+                }, opts);
+                pad = pad || '';
 
-				if (typeof val === 'number' ||
-					typeof val === 'boolean' ||
-					val === null ||
-					val === undefined) {
-					return val;
-				}
+                if (typeof val === 'number' ||
+                    typeof val === 'boolean' ||
+                    val === null ||
+                    val === undefined) {
+                    return val;
+                }
 
-				if(typeof val === 'string') {
-					return '"' + val +'"';
-				}
+                if(typeof val === 'string') {
+                    return '"' + val +'"';
+                }
 
-				if (val instanceof Date) {
-					return "new Date('" + val.toISOString() + "')";
-				}
+                if (val instanceof Date) {
+                    return "new Date('" + val.toISOString() + "')";
+                }
 
-				if ($.isArray(val)) {
-					if (_core.isEmpty(val)) {
-						return '[]';
-					}
+                if ($.isArray(val)) {
+                    if (core.isEmpty(val)) {
+                        return '[]';
+                    }
 
-					return '[' + opts.nr + _core.array.map(val, function (el, i) {
-						var eol = val.length - 1 === i ? opts.nr : ', '+opts.nr;
-						return pad + opts.indent + stringify(el, opts, pad + opts.indent) + eol;
-					}).join('') + pad + ']';
-				}
+                    return '[' + opts.nr + core.array.map(val, function (el, i) {
+                        var eol = val.length - 1 === i ? opts.nr : ', '+opts.nr;
+                        return pad + opts.indent + stringify(el, opts, pad + opts.indent) + eol;
+                    }).join('') + pad + ']';
+                }
 
-				if (_core.isPlainObject(val)) {
-					if (_core.array.indexOf(cache, val) !== -1) {
-						return null;
-					}
+                if (core.isPlainObject(val)) {
+                    if (core.array.indexOf(cache, val) !== -1) {
+                        return null;
+                    }
 
-					if (_core.isEmpty(val)) {
-						return '{}';
-					}
+                    if (core.isEmpty(val)) {
+                        return '{}';
+                    }
 
-					cache.push(val);
+                    cache.push(val);
 
-					objKeys = _core.object.keys(val);
+                    objKeys = core.object.keys(val);
 
-					return '{'+opts.nr + _core.array.map(objKeys, function (el, i) {
-						var eol = objKeys.length - 1 === i ? opts.nr : ', '+opts.nr;
-						var key = /^[^a-z_]|\W+/ig.test(el) && el[0] !== '$' ? stringify(el, opts) : el;
-						return pad + opts.indent + '"' + key + '": ' + stringify(val[el], opts, pad + opts.indent) + eol;
-					}).join('') + pad + '}';
-				}
+                    return '{'+opts.nr + core.array.map(objKeys, function (el, i) {
+                        var eol = objKeys.length - 1 === i ? opts.nr : ', '+opts.nr;
+                        var key = /^[^a-z_]|\W+/ig.test(el) && el[0] !== '$' ? stringify(el, opts) : el;
+                        return pad + opts.indent + '"' + key + '": ' + stringify(val[el], opts, pad + opts.indent) + eol;
+                    }).join('') + pad + '}';
+                }
 
-				if (opts.singleQuotes === false) {
-					return '"' + (val+'').replace(/"/g, '\\\"') + '"';
-				} else {
-					return "'" + (val+'').replace(/'/g, "\\\'") + "'";
-				}
-			})(val, opts, pad);
-		}
+                if (opts.singleQuotes === false) {
+                    return '"' + (val+'').replace(/"/g, '\\\"') + '"';
+                } else {
+                    return "'" + (val+'').replace(/'/g, "\\\'") + "'";
+                }
+            })(val, opts, pad);
+        }
     });
-	_core.object.has = _core.object.hasItems;
-	_core.json = _core.object;
+    core.object.has = core.object.hasItems;
+    core.json = core.object;
 
 
     /**
@@ -2218,12 +2284,15 @@
      * @namespace
      * @name jCore.date
      */
-    _core.define('date', function () {
+    core.define('date', function () {
         var months = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec".split(","),
             fullMonths = "January,Febrary,March,April,May,June,July,Augst,September,October,November,December".split(",");
 
 
         function compare(d1, d2) {
+            if(!(d1 instanceof Date)){ d1 = core.date.parse(d1); }
+            if(!(d2 instanceof Date)){ d2 = core.date.parse(d2); }
+
             return d1.getTime() > d2.getTime() ? -1 : (d1.getTime() === d2.getTime() ? 0 : 1);
         }
 
@@ -2268,6 +2337,14 @@
                     return formatString.replace(/yyyy/g, yyyy).replace(/yy/g, yy).replace(/MMMM/g, MMMM).replace(/MMM/g, MMM).replace(/MM/g, MM).replace(/M/g, M).replace(/dd/g, dd).replace(/d/g, d).replace(/hh/g, hh).replace(/h/g, h).replace(/mm/g, mm).replace(/m/g, m).replace(/ss/g, ss).replace(/s/g, s).replace(/!!!!/g, MMMM).replace(/!!!/g, MMM).replace(/H/g, H).replace(/x/g, x);
                 } else {
                     return "";
+                }
+            },
+
+            isValid: function(date) {
+                try {
+                    return !isNaN( this.parse(date).getTime() );
+                } catch(e){
+                    return false;
                 }
             },
 
@@ -2333,38 +2410,38 @@
                 return compare(value, date || new Date()) === -1;
             },
 
-			/**
-			 * 주어진 날짜를 기준으로 type에 따른 날짜를 반환
-			 * @param {Date} date 기준날짜
-			 * @param {String} type -2d, -3d, 4M, 2y ..
-			 * @param {String} format
-			 * @returns {Date|String}
-			 */
-			beforeDate: function(date, type, format) {
-				date = this.parse(date);
-				var m = type.match(/([-+]*)([0-9]*)([a-z]+)/i),
-					g = m[1] === '-' ? -1 : 1,
-					d = (m[2]|0) * g;
+            /**
+             * 주어진 날짜를 기준으로 type에 따른 날짜를 반환
+             * @param {Date} date 기준날짜
+             * @param {String} type -2d, -3d, 4M, 2y ..
+             * @param {String} format
+             * @returns {Date|String}
+             */
+            beforeDate: function(date, type, format) {
+                date = this.parse(date);
+                var m = type.match(/([-+]*)([0-9]*)([a-z]+)/i),
+                    g = m[1] === '-' ? -1 : 1,
+                    d = (m[2]|0) * g;
 
-				switch(m[3]) {
-					case 'd': 
-						date.setDate(date.getDate() + d);
-						break;
-					case 'w':
-						date.setDate(date.getDate() + (d * 7));
-						break;
-					case 'M':
-						date.setMonth(date.getMonth() + d);
-						break;
-					case 'y':
-						date.setFullYear(date.getFullYear() + d);
-						break;
-				}
-				if(format) {
-					return this.format(date, format);
-				}
-				return date;
-			},
+                switch(m[3]) {
+                    case 'd':
+                        date.setDate(date.getDate() + d);
+                        break;
+                    case 'w':
+                        date.setDate(date.getDate() + (d * 7));
+                        break;
+                    case 'M':
+                        date.setMonth(date.getMonth() + d);
+                        break;
+                    case 'y':
+                        date.setFullYear(date.getFullYear() + d);
+                        break;
+                }
+                if(format) {
+                    return this.format(date, format);
+                }
+                return date;
+            },
 
             /**
              * 주어진 날짜 형식의 문자열을 Date객체로 변환
@@ -2383,7 +2460,7 @@
                         return dateStringInRange;
                     }
 
-                    dateStringInRange = dateStringInRange.replace(/[^\d]+/g, '');
+                    dateStringInRange = (dateStringInRange+'').replace(/[^\d]+/g, '');
                     date = new Date(dateStringInRange);
                     if (!isNaN(date)) {
                         return date;
@@ -2401,11 +2478,22 @@
                         if (month != date.getMonth() + 1) {
                             date.setTime(NaN);
                         }
-						return date;
+                        return date;
                     }
                     return new Date;
                 };
             })(),
+
+            monthDiff: function(d1, d2) {
+                d1 = this.parse(d1);
+                d2 = this.parse(d2);
+
+                var months;
+                months = (d2.getFullYear() - d1.getFullYear()) * 12;
+                months -= d1.getMonth() + 1;
+                months += d2.getMonth();
+                return months;
+            },
 
             /**
              * 주어진 년월의 일수를 반환
@@ -2442,8 +2530,9 @@
                     '년': 31536000
                 };
 
-                return function(time, std) {
+                return function(time, std, tailWord) {
                     std || (std = +new Date);
+                    tailWord || (tailWord = '이전');
 
                     if(time instanceof Date) {
                         time = time.getTime();
@@ -2459,7 +2548,7 @@
 
                     amount = gap / ints[measure];
                     amount = gap > ints.day ? (Math.round(amount * 100) / 100) : Math.round(amount);
-                    amount += measure + ' 이전';
+                    amount += measure + ' ' + tailWord;
 
                     return amount;
                 };
@@ -2502,8 +2591,8 @@
              * jCore.date.timeDiff(new Date, new Date(new Date() - 51811));
              */
             diffTime: function(t1, t2) {
-                if(!_core.is(t1, 'date')) { t1 = new Date(t1); };
-                if(!_core.is(t2, 'date')) { t2 = new Date(t2); };
+                if(!core.is(t1, 'date')) { t1 = new Date(t1); };
+                if(!core.is(t2, 'date')) { t2 = new Date(t2); };
 
                 var diff = t1.getTime() - t2.getTime(),
                     ddiff = diff;
@@ -2692,9 +2781,9 @@
      * man.run(); // 결과: alert("i'm running...");
      */
     var Base = (function () {
-        var isFn = _core.isFunction,
-            emptyFn = _core.emptyFn,
-            include = _core.array.include,
+        var isFn = core.isFunction,
+            emptyFn = core.emptyFn,
+            include = core.array.include,
             F = function(){},
             ignoreNames = ['superclass', 'members', 'statics'];
 
@@ -2772,7 +2861,10 @@
             if (singleton) {
                 Class.getInstance = function () {
                     if (!instance) {
-                        instance = new Class();
+                        var args = [].slice.call(arguments);
+                        instance = new function() {
+                            Class.apply(this, args);
+                        };
                     }
                     return instance;
                 };
@@ -2808,7 +2900,7 @@
             Class.statics = function (o) {
                 o = o || {};
                 for (var k in o) {
-                    if (!_core.array.include(ignoreNames, k)) {
+                    if (!core.array.include(ignoreNames, k)) {
                         this[k] = o[k];
                     }
                 }
@@ -2825,11 +2917,11 @@
         Base.prototype.release = function(){};
         Base.extend = classExtend;
 
-        _core.Class = function(attr){ return classExtend.apply(this, [attr, true]); };
-        return _core.Base = Base;
+        core.Class = function(attr){ return classExtend.apply(this, [attr, true]); };
+        return core.Base = Base;
     })();
 
-    _core.define('Env', /** @lends jCore */{
+    core.define('Env', /** @lends jCore */{
         /**
          * 설정 값들이 들어갈 리터럴
          *
@@ -2885,14 +2977,21 @@
      * @name jCore.valid
      * @description 밸리데이션 함수 모음
      */
-    _core.define('valid', function () {
+    core.define('valid', function () {
         var trim = $.trim,
-            isString = _core.isString,
-            isNumber = _core.isNumber,
-            isElement = _core.isElement;
+            isString = core.isString,
+            isNumber = core.isNumber,
+            isNumeric = core.isNumeric,
+            isElement = core.isElement,
+            inRange = function(v, s, e) {
+                if(typeof v == 'undefined') { return false; }
+                v = v | 0;
+                if(v >= s && v <= e){ return true; }
+                return false;
+            };
 
         return /** @lends jCore.valid */{
-            empty: _core.isEmpty,
+            empty: core.isEmpty,
             /**
              * 필수입력 체크
              *
@@ -2934,15 +3033,30 @@
                 return (str = trim(str)) ? (/^[a-zA-Z]+$/).test(str) : false;
             },
             /**
-             * 숫자 체크
+             * 숫자 체크(실제 숫자타입인가)
              *
              * @param {String} str
              * @return {Boolean}
              */
-            num: function (str) {
-                isString(str) || (isElement(str) && (str = str.value));
-                return (str = trim(str)) ? isNumber(str) : false;
+            rawNum: function (str) {
+                isElement(str) && (str = str.value); // 엘리먼인 경우 .value에서 꺼내온다.
+                return isNumber(str);
             },
+
+            /**
+             * 숫자 체크
+             *
+             * @param {String} str
+             * @param {Boolean} allowSign (optional)  없으면 -, +기호를 허용안함, true이면 -, + 허용함
+             * @return {Boolean}
+             */
+            num: function (str, allowSign) {
+                isElement(str) && (str = str.value); // 엘리먼인 경우 .value에서 꺼내온다.
+                str = trim(str);
+                if(allowSign !== true && !/^[0-9]*$/g.test(str)) { return false; }
+                return isNumeric(str);
+            },
+
             /**
              * 유효한 url형식인지 체크
              *
@@ -2973,9 +3087,31 @@
                 isString(str) || (isElement(str) && (str = str.value));
                 return (str = trim(str)) ? (/^\d{1,3}-\d{3,4}-\d{4}$/).test(str) : false;
             },
+
             /**
-             * 유효한 yyyy-MM-dd형식인지 체크
+             * 날짜가 유효한지 체크(20130212, 2013-12-12, 2013-12-12 23:12:12 모두 체크 가능)
              *
+             *
+             * @param {String} str
+             * @return {Boolean}
+             */
+            date: function(str) {
+                isString(str) || (isElement(str) && (str = str.value));
+                if(!str){ return false; }
+                var s ='',
+                    m = str.match(/^(\d{4})[- ]*(\d{2})[- ]*(\d{2})[ ]*(\d{0,2})[:]*(\d{0,2})[:]*(\d{0,2})[:]*$/);
+                if(!m || m.length < 4){ return false; }
+                if(m.length > 4){
+                    if(!inRange(m[4], 0, 23)) { return false; }
+                    if(!inRange(m[5], 0, 59)) { return false; }
+                    if(!inRange(m[6], 0, 59)) { return false; }
+                }
+                return core.date.isValid(m[1]+'-'+m[2]+'-'+m[3]);
+            },
+            /**
+             * 유효한 yyyy-MM-dd형식인지 체크(삭제 예정)
+             *
+             * @deprecated
              * @param {String} str
              * @return {Boolean}
              */
@@ -2984,8 +3120,9 @@
                 return (str = trim(str)) ? (/^\d{4}-\d{2}-\d{2}$/).test(str) : false;
             },
             /**
-             * 유효한 yyyy-MM-dd hh:mm:ss형식인지 체크
+             * 유효한 yyyy-MM-dd hh:mm:ss형식인지 체크(삭제 예정)
              *
+             * @deprecated
              * @param {String} str
              * @return {Boolean}
              */
@@ -3036,7 +3173,7 @@
                 if (!pattern.test(num)) { return false; }
                 num = RegExp.$1 + RegExp.$2;
 
-                buf = _core.toArray(num);
+                buf = core.toArray(num);
                 odd = buf[7] * 10 + buf[8];
 
                 if (odd % 2 !== 0) { return false; }
@@ -3070,11 +3207,11 @@
     /**
      * @namespace
      * @name jCore.css3
-     * @description 
+     * @description
      */
-    _core.define('css3', function() {
+    core.define('css3', function() {
 
-        var _tmpDiv = _core.tmpNode,
+        var _tmpDiv = core.tmpNode,
             _prefixes = ['Webkit', 'Moz', 'O', 'ms', ''],
             _style = _tmpDiv.style,
             _noReg = /^([0-9]+)[px]+$/,
@@ -3091,14 +3228,14 @@
 
                 return false;
             })(),
-            string  = _core.string;
+            string  = core.string;
 
         function prefixStyle(name, isHippen) {
             if ( _vendor === false ) return name;
             if ( _vendor === '' ) return name;
-			if(isHippen){
-				return '-' + _vendor.toLowerCase()+'-'+name[0].toLowerCase()+name.substr(1);
-			}
+            if(isHippen){
+                return '-' + _vendor.toLowerCase()+'-'+name[0].toLowerCase()+name.substr(1);
+            }
             return _vendor + string.capitalize(name);
         }
 
@@ -3174,7 +3311,7 @@
              */
             prefix: prefixStyle,
             get: function(el, style) {
-                if (!el || !_core.is(el, 'element')) { return null; }
+                if (!el || !core.is(el, 'element')) { return null; }
                 var value;
                 if (el.currentStyle) {
                     value = el.currentStyle[ string.camelize(style) ];
@@ -3189,26 +3326,26 @@
         };
     });
 
-    _core.define('class', {
+    core.define('class', {
         has: function(el, c) {
-            if (!el || !_core.is(el, 'element')) { return false; }
+            if (!el || !core.is(el, 'element')) { return false; }
             var classes = el.className;
             if (!classes) { return false; }
             if (classes == c){ return true; }
             return classes.search("\\b" + c + "\\b") !== -1;
         },
         add: function(el, c) {
-            if (!el || !_core.is(el, 'element')) { return; }
+            if (!el || !core.is(el, 'element')) { return; }
             if (this.has(el, c)) { return; }
             if (el.className) { c = " " + c; }
             return el.className += c, this;
         },
         remove: function(el, c) {
-            if (!el || !_core.is(el, 'element')) { return; }
+            if (!el || !core.is(el, 'element')) { return; }
             return el.className = el.className.replace(new RegExp("\\b" + c + "\\b\\s*", "g"), ""), this;
         },
         replace: function(el, c, n) {
-            if (!el || !_core.is(el, 'element')) { return null; }
+            if (!el || !core.is(el, 'element')) { return null; }
             return this.remove(el, c), this.add(el, n), this;
         }
     });
@@ -3217,7 +3354,7 @@
      * @namespace
      * @name jCore.util
      */
-    _core.define('util', function() {
+    core.define('util', function() {
 
         return /** @lends jCore.util */{
 
@@ -3248,7 +3385,7 @@
                 var s, bg;
                 $('img[@src*=".png"]', document.body).each(function () {
                     this.css('filter', 'progid:DXImageTransform.Microsoft.AlphaImageLoader(src=\'' + this.src + '\', sizingMethod=\'\')');
-                    this.src = '/resource/images/_core/blank.gif';
+                    this.src = '/resource/images/core/blank.gif';
                 });
                 $('.pngfix', document.body).each(function () {
                     var $this = $(this);
@@ -3316,7 +3453,7 @@
                 for(var key in opts) {
                     tmp.push(key + '=' + opts[ key ]);
                 }
-                _core.browser.isSafari && tmp.push('location=yes');
+                core.browser.isSafari && tmp.push('location=yes');
                 tmp.push('height='+height);
                 tmp.push('width='+width);
                 /* + ', top=' + winCoords.top + ', left=' + winCoords.left;*/
@@ -3398,47 +3535,55 @@
              * @param { jquery/string } loadingClip
              * @return { jquery } deferred
              */
-            lazyImages: function( target, loadingClip ){
-                var $img = $(target),
+            lazyImages: function(target, loadingClip) {
+                var $imgs = $(target),
                     $loading = $(loadingClip),
-                    len = $img.length,
+                    len = $imgs.length,
                     def = $.Deferred();
 
                 function loaded(e) {
-                    if(e.type === 'error') {
+                    if (e.type === 'error') {
                         def.reject(e.target);
                         return;
                     }
+                    var $target;
+                    if($target = $(this).data('target')) {
+                        $target.css('background', 'url('+this.src+')');
+                    }
 
                     len--;
-                    if( !len ){
-                        if( $loading ){
+                    if (!len) {
+                        if ($loading) {
                             $loading.addClass("none");
-                            def.resolve();
-                            $img.off("load");
                         }
+                        def.resolve();
                     }
                 }
 
-                if( $loading ){
+                if ($loading) {
                     $loading.removeClass("none");
                 }
 
-                $img.on("load",loaded).each(function( value, index ){
-                    var $t = $(this);
-                    var src = $t.attr("data-src");
-
-                    if( src ){
-                        $t.attr("src", src);
-                    }else if( this.complete ){
-                        $t.trigger("load");
+                $imgs.each(function(i) {
+                    var $img = $imgs.eq(i);
+                    if(!$img.is('img')) {
+                        $img = $('<img>').data({
+                            'target': $img[0],
+                            'src': $img.attr('data-src')
+                        });
                     }
 
-                    $t.on("error",loaded);
+                    $img.one("load.lazyload error.lazyload", loaded);
+                    var src = $img.attr("data-src");
 
+                    if (src) {
+                        $img.attr("src", src);
+                    } else if (this.complete) {
+                        $img.trigger("load");
+                    }
                 });
 
-                return def;
+                return def.promise();
             },
 
             /**
@@ -3503,43 +3648,43 @@
                 }
                 return w;
             },
-			
-			
-			/**
-			 * @function scroll top animate
-			 * @name util.common.scrollTopAnimate
-			 * @param { Integer } y target y
-			 * @param { Integer } data.triggerY 
-			 * @param { Integer } data.duration
-			 * @param { function } data.triggerCallback
-			 * @param { function } data.completeCallback
-			 */
-			scrollTopAnimate: function( y, data ){
-				var $body = $("body");
-				var duration = ( data == undefined || data.duration == undefined  ) ? 200 : data.duration;
-		
-				var isTrigger = false;
-				var triggerFuncExe = function(){
-					if( data && data.triggerY != undefined && data.triggerY != "" && $body.scrollTop() < data.triggerY && !isTrigger){
-						isTrigger = true;
-						if( data && data.triggerCallback ){
-							data.triggerCallback();
-						}
-					}
-				}
-				
-				$body.stop().animate({scrollTop:y}, {duration:duration, 
-					step:function(){
-						triggerFuncExe();
-					}, complete:function(){
-						triggerFuncExe();
-						if( data && data.completeCallback ){
-							data.completeCallback();
-						}
-					}, ease: "easeOutQuad"
-				});
-			},
-			
+
+
+            /**
+             * @function scroll top animate
+             * @name util.common.scrollTopAnimate
+             * @param { Integer } y target y
+             * @param { Integer } data.triggerY
+             * @param { Integer } data.duration
+             * @param { function } data.triggerCallback
+             * @param { function } data.completeCallback
+             */
+            scrollTopAnimate: function( y, data ){
+                var $body = $("body");
+                var duration = ( data == undefined || data.duration == undefined  ) ? 200 : data.duration;
+
+                var isTrigger = false;
+                var triggerFuncExe = function(){
+                    if( data && data.triggerY != undefined && data.triggerY != "" && $body.scrollTop() < data.triggerY && !isTrigger){
+                        isTrigger = true;
+                        if( data && data.triggerCallback ){
+                            data.triggerCallback();
+                        }
+                    }
+                }
+
+                $body.stop().animate({scrollTop:y}, {duration:duration,
+                    step:function(){
+                        triggerFuncExe();
+                    }, complete:function(){
+                        triggerFuncExe();
+                        if( data && data.completeCallback ){
+                            data.completeCallback();
+                        }
+                    }, ease: "easeOutQuad"
+                });
+            },
+
             /**
              * 주어진 요소의 사이즈 & 위치를 반환
              * @param elem
@@ -3575,58 +3720,83 @@
                 };
             },
 
+            bindCheckAll: function(el) {
+                var $con = $(el);
+
+                // 전체 선택
+                $con.on('click.globalui', ' input:checkbox:enabled', function (e) {
+                    var $el = $(this),
+                        $checkes = $con.find('input:checkbox:enabled'),
+                        $checkAll = $checkes.filter('.d-checkall'),
+                        $others = $checkes.not('.d-checkall');
+
+                    if($el.hasClass('d-checkall')) {
+                        $others.prop('checked', this.checked);
+                    } else {
+                        $checkAll.prop('checked', $others.not(':checked').size() === 0);
+                    }
+                });
+
+            },
+
+            getFileName: function(str) {
+                var paths = str.split(/\/|\\/g);
+                return paths[paths.length - 1];
+            }
+
             /**
              *
              * @param {String} scriptUrl URL
              * @param {Function} [callback] 콜백
              * @return {Deferred} deferred
              */
-            loadScript: (function() {
-                var doc = document,
-                    loaded = {};
+            /*
+             loadScript: (function() {
+             var doc = document,
+             loaded = {};
 
-                return function(url, callback) {
-                    var defer = $.Deferred();
-                    if(loaded[url]){
-                        callback&&callback();
-                        defer.resolve(url)
-                        return defer;
-                    }
+             return function(url, callback) {
+             var defer = $.Deferred();
+             if(loaded[url]){
+             callback&&callback();
+             defer.resolve(url)
+             return defer.promise();
+             }
 
-                    var script = document.createElement('script');
+             var script = document.createElement('script');
 
-                    script.type = 'text/javascript';
-                    script.async = true;
+             script.type = 'text/javascript';
+             script.async = true;
 
-                    script.onerror = function() {
-                        defer.reject(url);
-                        //throw new Error(url + ' not loaded');
-                    };
+             script.onerror = function() {
+             defer.reject(url);
+             //throw new Error(url + ' not loaded');
+             };
 
-                    script.onreadystatechange = script.onload = function (e) {
-                        e = context.event || e;
+             script.onreadystatechange = script.onload = function (e) {
+             e = context.event || e;
 
-                        if (e.type == 'load' || this.readyState.test(/loaded|complete/)) {
-                            this.onreadystatechange = null;
-                            callback&&callback();
-                            defer.resolve(url);
-                        }
-                    };
+             if (e.type == 'load' || this.readyState.test(/loaded|complete/)) {
+             this.onreadystatechange = null;
+             callback&&callback();
+             defer.resolve(url);
+             }
+             };
 
-                    script.src = url;
-                    doc.getElementsByTagName('head')[0].appendChild(script);
-                    return defer;
-                };
-            })()
+             script.src = url;
+             doc.getElementsByTagName('head')[0].appendChild(script);
+             return defer.promise();
+             };
+             })()*/
         };
     });
-    _core.openPopup = _core.util.openPopup;
+    core.openPopup = core.util.openPopup;
 
-    _core.define('Cookie', {
-		defaults: {
-			domain: location.host,
-			path: '/'
-		},
+    core.define('Cookie', {
+        defaults: {
+            // domain: location.host,
+            path: '/'
+        },
 
         /**
          * 쿠키를 설정
@@ -3641,10 +3811,11 @@
         set: function (name, value, options) {
             options || (options = {});
             var curCookie = name + "=" + encodeURIComponent(value) +
-                ((options.expires instanceof Date) ? "; expires=" + options.expires.toGMTString() : "") +
-                ((options.path) ? "; path=" + options.path : ";path="+_core.Cookie.defaults.path) +
-                ((options.domain) ? "; domain=" + options.domain : _core.Cookie.defaults.domain) +
+                ((options.expires) ? "; expires=" + (options.expires instanceof Date ? options.expires.toGMTString() : options.expires) : "") +
+                ((options.path) ? "; path=" + options.path : '') +
+                ((options.domain) ? "; domain=" + options.domain : '') +
                 ((options.secure) ? "; secure" : "");
+
             document.cookie = curCookie;
         },
 
@@ -3688,10 +3859,12 @@
          */
         addToArray: function(name, val, sep) {
             sep = sep || '|';
+            val = val + '';
+
             var value = this.get(name),
                 values = value ? value.split(sep) : [];
 
-            if(!_core.array.include(values, val)) {
+            if(!core.array.include(values, val)) {
                 values.push(val);
             }
 
@@ -3702,28 +3875,30 @@
          * name에 셋팅되어 있던 조합문자열에서 val를 제거
          * @param {String} name 쿠키명
          * @param {String} val 값
-         * @param {String} sep 
+         * @param {String} sep
          * @example
          * jCore.cookie.addToArray('arr', 'a');
          * jCore.cookie.addToArray('arr', 'b');  // arr:a|b
          */
         removeToArray: function(name, val, sep) {
             sep = sep || '|';
+            val = val + '';
+
             var value = this.get(name),
                 values = value ? value.split(sep) : [];
 
-            values = _core.array.remove(values, val);
+            values = core.array.remove(values, val);
 
             this.set.apply(this, [name, values.join(sep)].concat(arguments));
         }
     });
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    var $win = _core.$win,
-        $doc = _core.$doc,
+    var $win = core.$win,
+        $doc = core.$doc,
         View;		// jCore.ui.View
 
-    _core.define( /** @lends jCore */{
+    core.define( /** @lends jCore */{
         /*cleanUIModules: function(el) {
          $('[data-ui-modules]', el).each(function(){
          var $el = $(this),
@@ -3771,11 +3946,17 @@
                 this.each(function() {
                     var $this = $(this),
                         methodValue,
-                        instance;
+                        instance = $this.data('ui_'+name);
 
-                    if ( !(instance = $this.data(name)) || (a.length === 1 && typeof options !== 'string')) {
+                    if(instance && options === 'release') {
+                        try { instance.release(); } catch(e){}
+                        $this.removeData('ui_'+name);
+                        return;
+                    }
+
+                    if ( !instance || (a.length === 1 && typeof options !== 'string')) {
                         instance && (instance.release(), instance = null);
-                        $this.data(name, (instance = new Klass(this, extend({}, $this.data(), options), me)));
+                        $this.data('ui_'+name, (instance = new Klass(this, extend({}, $this.data(), options), me)));
                     }
 
                     if(options === 'instance'){
@@ -3783,13 +3964,13 @@
                         return false;
                     }
 
-                    if (typeof options === 'string' && _core.is(instance[options], 'function')) {
+                    if (typeof options === 'string' && core.is(instance[options], 'function')) {
                         if(options[0] === '_') {
                             throw new Error('[bindjQuery] private 메소드는 호출할 수 없습니다.');
                         }
 
-                       // try {
-                            methodValue = instance[options].apply(instance, args);
+                        // try {
+                        methodValue = instance[options].apply(instance, args);
                         //} catch(e) {
                         //    console.error('[jQuery bind error] ' + e);
                         //}
@@ -3812,7 +3993,7 @@
     });
 
 
-    _core.define('Listener', function () {
+    core.define('Listener', function () {
         /**
          * 이벤트 리스너
          * @class
@@ -3887,7 +4068,7 @@
      * // 등록된 옵저버 실행
      * jCore.PubSub.trigger('customevent');
      */
-    _core.define('PubSub', function () {
+    core.define('PubSub', function () {
 
         var PubSub = $(window);
         PubSub.attach = PubSub.on;
@@ -3902,13 +4083,22 @@
      * @param attr
      * @returns {*}
      */
-    _core.ui = function(/*String*/name, supr, /*Object*/attr) {
-        var bindName, Klass, isFn = _core.isFunction;
+    core.ui = function(/*String*/name, supr, /*Object*/attr) {
+        var bindName, Klass, isFn = core.isFunction;
 
         if(!attr) {
             attr = supr;
+            supr = null;
         }
-        supr = _core.ui[supr] || (attr&&attr.$extend) || _core.ui.View;
+        if(typeof supr === 'string'){
+            supr = core.ui[supr];
+        } else if(attr.$extend) {
+            supr = attr.$extend
+        } else if(supr && supr.superclass) {
+            // supr = supr;
+        } else {
+            supr = core.ui.View;
+        }
 
         if(isFn(attr)) {
             if(!isFn(attr = attr(supr))) {
@@ -3923,19 +4113,19 @@
         }
 
         Klass.prototype.name = name;
-        _core.define('ui.' + name, Klass);
+        core.define('ui.' + name, Klass);
         if (bindName) {
-            _core.bindjQuery(Klass, bindName);
+            core.bindjQuery(Klass, bindName);
         }
         return Klass;
     };
 
-    _core.ui.setDefaults = function(name, opts) {
-        $.extend(true, _core.ui[name].prototype.defaults, opts);
+    core.ui.setDefaults = function(name, opts) {
+        $.extend(true, core.ui[name].prototype.defaults, opts);
     };
 
-    View = _core.define('ui.View', function () {
-        var isFn = _core.isFunction,
+    View = core.define('ui.View', function () {
+        var isFn = core.isFunction,
             execObject = function(obj, ctx) {
                 return isFn(obj) ? obj.call(ctx) : obj;
             };
@@ -3987,7 +4177,7 @@
          *
          * new jCore.ui.Slider('#slider', {count: 10});
          */
-        var View = _core.Base.extend(/** @lends jCore.ui.View# */{
+        var View = core.Base.extend(/** @lends jCore.ui.View# */{
             $statics: {
                 _instances: [] // 모든 인스턴스를 갖고 있는다..
             },
@@ -4004,23 +4194,27 @@
                     eventPattern = /^([a-z]+) ?([^$]*)$/i,
                     moduleName, superClass;
 
-                if (!me.name) {
-                    throw new Error('클래스의 이름이 없습니다');
+                if(!el) {
+                    throw new Error('[ui.View] el객체가 없습니다.');
                 }
 
-                moduleName = me.moduleName = _core.string.toFirstLower(me.name);
+                if (!me.name) {
+                    throw new Error('[ui.View] 클래스의 이름이 없습니다');
+                }
+
+                moduleName = me.moduleName = core.string.toFirstLower(me.name);
                 me.$el = el instanceof jQuery ? el : $(el);
 
                 // 강제로 리빌드 시킬 것인가 ///////////////////////////////////////////////////////////////
                 if (options.rebuild === true) {
-                    try { me.$el.data(moduleName).release(); } catch(e) {}
-                    me.$el.removeData(moduleName);
+                    try { me.$el.data('ui_'+moduleName).release(); } catch(e) {}
+                    me.$el.removeData('ui_'+moduleName);
                 } else {
                     // 이미 빌드된거면 false 반환 - 중복 빌드 방지
-                    if (me.$el.data(moduleName) ) {
+                    if (me.$el.data('ui_'+moduleName) ) {
                         return false;
                     }
-                    me.$el.data(moduleName, this);
+                    me.$el.data('ui_'+moduleName, this);
                 }
 
 
@@ -4034,7 +4228,7 @@
                 View._instances.push(me);
                 me.el = me.$el[0];  // 원래 엘리먼트도 변수에 설정
                 me.options = $.extend(true, {}, superClass.defaults, me.defaults, me.$el.data(), options);			// 옵션 병합
-                me.cid = moduleName + '_' + _core.nextSeq();    // 객체 고유 키
+                me.cid = moduleName + '_' + core.nextSeq();    // 객체 고유 키
                 me.subViews = {};   // 하위 컨트롤를 관리하기 위함
                 me._eventNamespace = '.' + /*moduleName*/ me.cid;	// 객체 고유 이벤트 네임스페이스명
 
@@ -4045,16 +4239,16 @@
                 // events: {
                 //	'click ul>li.item': 'onItemClick', //=> this.$el.on('click', 'ul>li.item', this.onItemClick); 으로 변환
                 // }
-                me.options.events = _core.extend({},
+                me.options.events = core.extend({},
                     execObject(me.events, me),
                     execObject(me.options.events, me));
-                _core.each(me.options.events, function (value, key) {
+                core.each(me.options.events, function (value, key) {
                     if (!eventPattern.test(key)) { return false; }
 
                     var name = RegExp.$1,
                         selector = RegExp.$2,
                         args = [name],
-                        func = isFn(value) ? value : (isFn(me[value]) ? me[value] : _core.emptyFn);
+                        func = isFn(value) ? value : (isFn(me[value]) ? me[value] : core.emptyFn);
 
                     if (selector) { args[args.length] = $.trim(selector); }
 
@@ -4065,7 +4259,7 @@
                 });
 
                 // options.on에 지정한 이벤트들을 클래스에 바인딩
-                me.options.on && _core.each(me.options.on, function (value, key) {
+                me.options.on && core.each(me.options.on, function (value, key) {
                     me.on(key, value);
                 });
 
@@ -4082,11 +4276,11 @@
                 //  box: 'ul',			// => this.$box = this.$el.find('ul');
                 //  items: 'ul>li.item'  // => this.$items = this.$el.find('ul>li.item');
                 // }
-                me.selectors = _core.extend({},
+                me.selectors = core.extend({},
                     execObject(me.constructor.superclass.selectors, me),
                     execObject(me.selectors, me),
                     execObject(me.options.selectors, me));
-                _core.each(me.selectors, function (value, key) {
+                core.each(me.selectors, function (value, key) {
                     if (typeof value === 'string') {
                         me['$' + key] = me.$el.find(value);
                     } else if (value instanceof jQuery) {
@@ -4119,7 +4313,7 @@
                 me.$el.removeData(me.moduleName);
 
                 // me.subviews에 등록된 자식들의 파괴자 호출
-                _core.each(me.subViews, function(item, key) {
+                core.each(me.subViews, function(item, key) {
                     if (key.substr(0, 1) === '$') {
                         item.off(me._eventNamespace);
                     } else {
@@ -4128,7 +4322,7 @@
                     me.subViews[key] = null;
                 });
 
-                _core.array.remove(View._instances, me);
+                core.array.remove(View._instances, me);
             },
 
             /**
@@ -4289,470 +4483,21 @@
         return View;
     });
 
-// ======================================== 
-           // SNS 별 공유 함수
-           // ========================================
-           /**
-           * 페이스북 공유
-           * @private
-           * @function
-           * @param {JSON} data 공유 데이터
-           */
-           function shareFacebook( data ) {
-                     var url = [
-                         'https://www.facebook.com/sharer/sharer.php',
-                         '?u=', encodeURIComponent( data.url )
-                     ];
-                     
-                     if ( gSsgDevice ) {
-                                Common.callApp( 'shinsegae-ssg://out_webpage/?link=' + url.join( '' ) );
-                     } else {
-                                Common.openWindow( url.join( '' ), 'winSnsShare' );
-                     }
-           }
-           
-           /**
-           * 트위터 공유
-           * @private
-           * @function
-           * @param {JSON} data 공유 데이터
-           */
-           function shareTwitter( data ) {
-                     var url = [
-                        'https://twitter.com/intent/tweet',
-                        '?text=', encodeURIComponent( data.title ),
-                        '&url=', encodeURIComponent( data.url )
-                     ];
-                     
-                     if ( gSsgDevice ) {
-                                Common.callApp( 'shinsegae-ssg://out_webpage/?link=' + url.join( '' ) );
-                     } else {
-                                Common.openWindow( url.join( '' ), 'winSnsShare' );
-                     }
-           }
-           
-           /**
-           * 카카오톡 공유
-           * @private
-           * @function
-           * @param {JSON} data 공유 데이터
-           */
-           function shareKakaoTalk( data ) {
-                     var m = data.title.match( /^\[([^\]]*)\]\s*(.*)/ ),
-                                d = {
-                                          apiver: '2.0',
-                                          appid: 'shinsegae.com',
-                                          appver: '1.0',
-                                          appname: ( m || [] )[ 1 ],
-                                          msg: ( m || [] )[ 2 ],
-                                          url: data.url
-                                };
-                     
-                     if ( gSsgDevice ) {
-                                Common.callApp( 'kakaolink://sendurl?' + Common.jsonToParam( d ) );
-                     } else {
-                                kakao.link( 'talk' ).send( d );
-                     }
-           }
-           
-           /**
-           * 카카오스토리 공유
-           * @private
-           * @function
-           * @param {JSON} data 공유 데이터
-           */
-           function shareKakaoStory( data ) {
-                     var d = {
-                                           apiver: '1.0',
-                                          post: data.url,
-                             appid: 'shinsegae.com',
-                             appver: '1.0',
-                             appname: '신세계',
-                             urlinfo: JSON.stringify({
-                             title: data.title,
-                             desc: data.desc,
-                             imageurl: $.isArray( data.image ) ? data.image : ( data.image || '' ).toString().split( /\s*,\s*/ )
-                             })
-                                };
-                     
-                     if ( gSsgDevice ) {
-                                Common.callApp( 'storylink://posting?' + Common.jsonToParam( d ) );
-                     } else {
-                                kakao.link( 'story' ).send( d );
-                     }
-           }
-
-	_core.define('app', {
-		varDevice: 'gSsgDevice',
-		deviceIphone: 'ssg.iphone',
-		deviceAndroid: 'ssg.android',
-		userDevice: 'iphone',
-		scheme: 'shinsegae-ssg://',
-		id: 'shinsegae.com',
-		apiver: '1.0',
-		ver: '1.0',
-		name: '신세계',
-		androidAppUrl: "https://play.google.com/store/apps/details?id=com.F1.ShinSG",
-		iphoneAppUrl: "https://itunes.apple.com/kr/app/sinsegyebaeghwajeom/id411625066?mt=8",
-		androidUID: 'com.F1.ShinSG',
-		iphoneUID: 'id411625066',
-
-		varHeaderTitle: 'gHeaderTitle',
-		headerTitle: 'SHINSEGAE',
-		varHeaderType: 'gHeaderType',
-
-		/**
-         * 앱 인터페이스 호출
-         * TODO 앱이 설치되어 있지 않은 경우 처리
-         * @function
-         * @param {String} command 커맨드
-         * @param {Boolean} [isSub] 서브 커맨드 여부
-         * @example
-         *  <a href="shinsegae-ssg://set_header/?title=신세계" onclick="Common.callApp(this.href); return false;">App Command</a>
-         *  Common.callApp( 'shinsegae-ssg://set_header/?title=신세계' );
-         *  Common.callApp( 'set_header/?title=신세계' );
-         */
-        callApp: function(command, isSub) {
-            var parsed = command.match(/^([^\/]*[\/]*)(.*)/) || [],
-                scheme = parsed[1] || this.scheme,
-                requri = parsed[2] || '',
-                iframe = undefined;
-
-            if (window[this.varDevice]) {
-                $('iframe.app_command').remove();
-
-                if (isSub) {
-                    iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.className = 'app_command';
-                    iframe.src = scheme + requri;
-                    document.body.appendChild(iframe);
-                } else {
-                    location.href = scheme + requri;
-                }
-            }
-        },
-
-
-        /**
-         * 앱 실행
-         * @function
-         * @param {String} data.install 설치 URL (ex: 'market://details?id={uid}' uid 는 data.uid로 치환)
-         * @param {String} data.command 실행 커맨드
-         * @param {String} data.uid 앱 아이디
-         */
-        openApp: function(data) {
-            if (window[this.varDevice]) {
-				var reg = new RegExp('/^'+this.scheme.replace('://')+'/');
-                if (reg.test(data.command)) {
-                    // 신세계 앱
-                    this.checkRooting(function() {
-                        this.callApp(data.command);
-                    }.bind(this));
-                } else {
-                    // 외부 앱
-                    this.callApp(this.scheme+'open_app/?scheme=' + data.command.replace(/:.*/, '') + '&install_param=' + data.uid);
-                }
-            } else {
-                if (confirm('해당기능은 '+this.name+' 앱(App)에서 사용가능합니다. 앱을 실행하거나 다운로드 하시겠습니까?')) {
-                    if (window[this.userDevice] === 'android') {
-                        // 모바일 웹 안드로이드
-                        this._openAppWebA(data);
-                    } else {
-                        // 모바일 웹 아이폰
-                        this._openAppWebI(data);
-                    }
-                }
-            }
-        },
-
-	    /**
-         * 앱 실행
-         * @function
-         * @param {String} data.install 설치 URL (ex: 'market://details?id={uid}' uid 는 data.uid로 치환)
-         * @param {String} data.command 실행 커맨드
-         * @param {String} data.uid 앱 아이디
-         */
-        openAppYsfl: function(data) {
-            if (window[this.varDevice]) {
-				var reg = new RegExp('/^'+this.scheme.replace('://')+'/');
-                if (reg.test(data.command)) {
-                    // 신세계 앱
-                    this.checkRooting(function() {
-                        this.callApp(data.command);
-                    }.bind(this));
-                } else {
-                    // 외부 앱
-                    this.callApp(this.scheme+'open_app/?scheme=' + data.command.replace(/:.*/, '') + '&install_param=' + data.uid);
-                }
-            } else {
-                if (confirm('해당기능은 '+this.name+' 앱(App)에서 사용가능합니다. 앱을 실행하거나 다운로드 하시겠습니까?')) {
-                    if (window[this.userDevice] === 'android') {
-                        // 모바일 웹 안드로이드
-                        location.href = this.androidAppUrl;
-                    } else {
-                        // 모바일 웹 아이폰
-                        location.href = this.iphoneAppUrl;
-                    }
-                }
-            }
-        },
-
-        /**
-         * 앱 실행
-         * @function
-         * @param {String} data.install 설치 URL (ex: 'market://details?id={uid}' uid 는 data.uid로 치환)
-         * @param {String} data.command 실행 커맨드
-         * @param {String} data.uid 앱 아이디
-         */
-        openAppNoAlarm: function(data) {
-            if (window[this.varDevice]) {
-				var reg = new RegExp('/^'+this.scheme.replace('://')+'/');
-                if (reg.test(data.command)) {
-                    // 신세계 앱
-                    this.checkRooting(function() {
-                        this.callApp(data.command);
-                    }.bind(this));
-                } else {
-                    // 외부 앱
-                    this.callApp(this.scheme+'open_app/?scheme=' + data.command.replace(/:.*/, '') + '&install_param=' + data.uid);
-                }
-            } else {
-                if (window[this.userDevice] === 'android') {
-                    // 모바일 웹 안드로이드
-                    this._openAppWebA(data);
-                } else {
-                    // 모바일 웹 아이폰
-                    this._openAppWebI(data);
-                }
-            }
-        },
-
-        /**
-         * 앱 실행(For Android)
-         * @private
-         * @function
-         * @param {JSON} data 데이터
-         */
-        _openAppWebA: function(data) {
-            var ua = navigator.userAgent.toLowerCase(),
-                iframe = undefined,
-                install_setup = undefined,
-                install_clear = undefined;
-
-            // 인스톨 설정
-            install_setup = function(u) {
-                location.href = u;
-            };
-
-            // 인스톨 해제
-            install_clear = function() {
-                if (iframe) {
-                    document.body.removeChild(iframe);
-                }
-            };
-
-            // 함수 재정의
-            this._openAppWebA = function(data) {
-                var d = $.extend({
-                    install: 'market://details?id={uid}',
-                    command: this.scheme+'launch_app/',
-                    uid: this.andoidUID
-                }, data);
-
-                window.location = "intent:" + d.command + "#Intent;package=" + d.uid + ";end;";
-            }.bind(this);
-
-            // 최초 실행
-            this._openAppWebA(data);
-        },
-
-        /**
-         * 앱 실행(For IOS)
-         * @private
-         * @function
-         * @param {JSON} data 데이터
-         */
-        _openAppWebI: function(data) {
-            var timer = undefined,
-                install_setup = undefined,
-                install_clear = undefined;
-
-            // 인스톨 설정
-            install_setup = function(u) {
-                clearTimeout(timer);
-                timer = setTimeout(function() {
-                    location = u;
-                }, 1000);
-            };
-
-            // 인스톨 해제
-            install_clear = function() {
-                clearTimeout(timer);
-            };
-
-            // 함수 재정의
-            this._openAppWebI = function(data) {
-                var d = $.extend({
-                    install: 'http://itunes.apple.com/app/{uid}',
-                    command: this.scheme+'launch_app/',
-                    uid: this.iphoneUID
-                }, data);
-
-                install_clear();
-                install_setup(d.install.replace('{uid}', d.uid));
-
-                window.removeEventListener('pagehide', install_clear);
-                window.addEventListener('pagehide', install_clear);
-                window.location = d.command;
-            }.bind(this);
-
-            // 최초 실행
-            Common._openAppWebI(data);
-        },
-
-		/**
-         * 앱 루팅 확인 요청
-         * @function
-         * @params {Function} checkRootingAfterFunc 앱 루팅 확인 후 실행할 함수. 앱이 아니면 바로 실행한다.
-         * @example
-         *  Common.checkRooting(function() {
-         *      alert( 'run' );
-         *  });
-         */
-        checkRooting: function(checkRootingAfterFunc) {
-            if (window[this.varDevice]) {
-                $(document).trigger('ajaxStart');
-                this.callApp(this.scheme+'check_rooting/');
-                window.checkRootingAfterFunc = checkRootingAfterFunc;
-            } else {
-                checkRootingAfterFunc();
-            }
-        },
-
-        /**
-         * 앱 루팅 확인 요청 콜백
-         * @function
-         * @params {Boolean} isRooting 루팅 여부
-         */
-        notifyRooting: function(isRooting) {
-            if (window[this.varDevice]) {
-                $(document).trigger('ajaxStop');
-
-                //if ( ! isRooting ) {
-                // IOS 루팅되었어도 정상 처리
-                // TODO DELETE
-                if (!isRooting || window[this.varDevice] === this.deviceIphone) {
-                    // TODO DELETE
-
-                    if (window.checkRootingAfterFunc) {
-                        window.checkRootingAfterFunc();
-                        delete window.checkRootingAfterFunc;
-                    }
-                } else {
-                    alert('정식 OS가 아닌 폰입니다. 일부 서비스 이용에 제한이 있을 수 있으며, 보다 원활한 서비스 이용을 위해 정식 OS로 업데이트 부탁드립니다.');
-                }
-            }
-        },
-
-        /**
-         * 앱 헤더 정보 설정
-         * @function
-         * @param {String} [title] 헤더 타이틀
-         * @param {String} [type] 헤더 유형 [ A:메인뷰 | B:보관함 | C:나의최근소식 | D:매장안내 | empty:메인뷰 ]
-         */
-        setAppHeader: function(title, type) {
-            var tt = title || window[this.varHeaderTitle] || this.headerTitle,
-                ty = type || window[this.varHeaderType] || '';
-
-            if (window[this.varDevice]) {
-                if (ty) {
-                    this.callApp(this.scheme+'set_header/?util=' + ty + '&title=' + tt);
-                } else {
-                    this.callApp(this.scheme+'set_header/?title=' + tt);
-                }
-            }
-        }
-
-	});
-
-	_core.define('sns', (function() {
-		
-		return {
-			supports: ['facebook', 'twitter', 'kakaotalk', 'kakaostory'/* , 'googleplus'*/],
-			makeShortUrl: '',
-			share: function(type, data) {
-				data.url = (data.url+'').replace(/#$/g, '');
-				data.url = data.url || location.href.replace(/#$/g, '');
-				data.title = data.title||document.title;
-				
-				$.ajax({
-					url: _core.sns.makeShortUrl+data.url,
-					dataType: 'jsonp' 
-				}).done(function(json) {
-					if(json.message === 'ok') {
-						url = json.result.url;
-
-						switch(type) {
-							case 'facebook':
-								window.open('http://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url) + (title && '&t=' + encodeURIComponent(title)), 'facebook', 'menubar=no,height=300, width=550');
-								break;
-							case 'twitter':
-								window.open('http://twitter.com/intent/tweet?text=' + encodeURIComponent(title + ' ' + url), 'twitter', 'menubar=no,height=300, width=550');
-								break;
-							case 'googleplus':
-								window.open('https://plus.google.com/share?url=' + encodeURIComponent(title + ' ' + url), 'google', 'menubar=no,height=300, width=550');
-								break;
-							case 'kakaotalk':
-							case 'kakaostory':
-								var info = {
-									kakaotalk: {
-										scheme:  'kakaolink://sendurl?',
-										link: 'talk'
-									},
-									kakaostory: {
-										scheme: 'storylink://posting?',
-										link: 'story'
-									}
-								};
-								 var d = {
-									apiver: _core.sns.apiver,
-									post: url,
-									appid: _core.app.id,
-									appver: _core.app.ver,
-									appname: _core.app.name,
-									urlinfo: _core.json.stringify({
-										title: data.title,
-										desc: data.desc,
-										imageurl: $.isArray( data.image ) ? data.image : ( data.image || '' ).toString().split( /\s*,\s*/ )
-									})
-								};
-                    
-
-								 if ( window[_core.app.varDevice] ) {
-											_core.app.callApp( info[type].scheme + _core.json.toQueryString( d ) );
-								 } else {
-											kakao.link( info[type].link ).send( d );
-								 }
-								break;
-							default:
-								break;
-						}
-					}
-				});
-			}
-		};
-	})());
-
 })(window, jQuery);
 
 (function($, core, ui, undefined) {
     "use strict";
 
+
     var $doc = core.$doc,
-        $win = core.$win;
+        $win = core.$win,
+        strUtil = core.string,
+        dateUtil = core.date,
+        numberUtil = core.number,
+        browser = core.browser,
+        isTouch = browser.isTouch;
 
-
+    // Modal ////////////////////////////////////////////////////////////////////////////
     /**
      * 모달 클래스<br />
      * // 옵션 <br />
@@ -4769,7 +4514,7 @@
      * @extends jCore.ui.View
      * @example
      */
-    var Modal = core.ui('Modal', /** @lends jCore.ui.Modal# */{
+    var Modal = ui('Modal', /** @lends jCore.ui.Modal# */{
         bindjQuery: 'modal',
         $statics: /** @lends jCore.ui.Modal */{
             /**
@@ -5019,32 +4764,32 @@
          * 도큐먼트의 가운데에 위치하도록 지정
          */
         layout: function(){
-			var me = this;
-			var containHei  = jCore.util.getDocHeight();
-			var containWid = jCore.util.getDocWidth();
-	    	var layerOuterHei = me.$el.outerHeight();
-	    	var bodyTop = core.getBody().scrollTop();
-	    	
-	    	//dim이 레이어팝업보다 작을때 10px 더 크게 셋팅
-	    	if( containHei <  layerOuterHei ){
-	    		me.$overlay.height( layerOuterHei+10 );
-	    	}
-	    	
-	    	//console.log("containHei", containHei, "layerOuterHei", layerOuterHei, "bodyTop", bodyTop )
-	    	if( containHei > (layerOuterHei + bodyTop) ){
-		    	var targetTop = bodyTop+(($win.height() - layerOuterHei)*0.5);
-		    }else{
-		    	var targetTop = me.$overlay.height()-me.$el.outerHeight();
-		    }
-		    
-			if( targetTop < 0 ){ 
-	    		targetTop = 0; 
-	    	}
-			
-		    me.$el.css({
-		    	'position': 'absolute',
+            var me = this;
+            var containHei  = jCore.util.getDocHeight();
+            var containWid = jCore.util.getDocWidth();
+            var layerOuterHei = me.$el.outerHeight();
+            var bodyTop = core.getBody().scrollTop();
+
+            //dim이 레이어팝업보다 작을때 10px 더 크게 셋팅
+            if( containHei <  layerOuterHei ){
+                me.$overlay.height( layerOuterHei+10 );
+            }
+
+            //console.log("containHei", containHei, "layerOuterHei", layerOuterHei, "bodyTop", bodyTop )
+            if( containHei > (layerOuterHei + bodyTop) ){
+                var targetTop = bodyTop+(($win.height() - layerOuterHei)*0.5);
+            }else{
+                var targetTop = me.$overlay.height()-me.$el.outerHeight();
+            }
+
+            if( targetTop < 0 ){
+                targetTop = 0;
+            }
+
+            me.$el.css({
+                'position': 'absolute',
                 'top' : targetTop,
-				'left': (containWid-me.$el.outerWidth())*0.5
+                'left': (containWid-me.$el.outerWidth())*0.5
             });
         },
 
@@ -5083,11 +4828,11 @@
                             case 'touchmove':
                                 if(!isMouseDown){ return; }
                                 /*if(e.pageX + size.width > docSize.width
-                                    || e.pageY + size.height > docSize.height
-                                    || e.pageX - oriPos.left < 0
-                                    || e.pageY - oriPos.top < 0) {
-                                    return;
-                                }*/
+                                 || e.pageY + size.height > docSize.height
+                                 || e.pageX - oriPos.left < 0
+                                 || e.pageY - oriPos.top < 0) {
+                                 return;
+                                 }*/
 
                                 me.$el.css({
                                     left: e.pageX - oriPos.left,
@@ -5226,7 +4971,6 @@
         $(el).modal(options);
     };
 
-
     /**
      * @class ui.AjaxModal
      * @description 페이징모듈
@@ -5238,7 +4982,7 @@
                 url: url
             }, options && options.ajax)).done(function(html) {
                 var el = $(html.replace(/\n|\r/g, "")).appendTo('body');
-                var modal = new ui.Modal(el, core.extend({removeOnClose: true, show: true}, options));
+                var modal = new Modal(el, core.extend({removeOnClose: true, show: true}, options));
                 modal.getElement().buildUIControls();
                 modal.on('modalhidden', function(){
                     el = null;
@@ -5290,30 +5034,17 @@
         '<button type="button" class="d-close"><span>닫기</span></button>',
         '<span class="shadow"></span>',
         '</div>'].join('');
+    ///////////////////////////////////////////////////////////////////////////////////////
 
-
-
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
-
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        strUtil = core.string,
-        dateUtil = core.date,
-        numberUtil = core.number,
-
-        daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-        Calendar;
-
+    //Calendar ////////////////////////////////////////////////////////////////////////////
     /**
      * @class
      * @description 달력
      * @name jCore.ui.Calendar
      * @extends jCore.ui.View
      */
-    Calendar = ui('Calendar', {
+    var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    var Calendar = ui('Calendar', /** @lends jCore.ui.Calendar# */{
         bindjQuery: 'calendar',
         defaults: {
             weekNames: ['일', '월','화','수','목','금', '토'],
@@ -5324,24 +5055,32 @@
             weekendDisabled: false,     // 주말을 disabled시킬 것인가
             type: 'button',           // 날짜가 선택되게 할 것인가
             inputTarget: '',            // 날짜를 선택했을 때, 날짜가 들어갈 인풋박스의 셀렉터
-			marginTop: 4,
+            marginTop: 4,
             showOtherMonths: false,     // 이전, 다음달의 날짜를 표시할 것인가
-            showDate: new Date(),       // 처음에 표시할 기본 날짜
+            date: new Date(),       // 처음에 표시할 기본 날짜
             today: new Date(),
+            useSelectbox: true,
+            startSelectYear: '2004',
+            endSelectYear: '+1',
             template: {
-                header: '<button class="d-calendar-prev">이전달</button>' +
-                    '<span class="d-calendar-text"></span>' +
-                    '<button class="d-calendar-next">다음달</button>',
+                header: '<button class="m-calendar-prev">이전달</button>' +
+                    '<span class="m-calendar-text"></span>' +
+                    '<button class="m-calendar-next">다음달</button>',
 
-                label: '<span class="d-calendar-day" title="<%-title%>"><%=day%></span>',
-                button: '<button class="d-calendar-day" title="<%-title%>" <%-disabled%>><%=day%></button>'
+                selectHeader: '<a href="#" class="m-calendar-prev"><span class="hide">이전달</span></a>' +
+                    '<select class="m-calendar-years y_selct" title="해당년 선택란"></select>' +
+                    '<select class="m-calendar-months m_selct" title="해당월 선택란"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select>' +
+                    '<a href="#" class="m-calendar-next"><span class="hide">다음달</span></a>',
+
+                label: '<span class="m-calendar-day" title="<$-title$>"><$=day$></span>',
+                button: '<button class="m-calendar-day" title="<$-title$>" <$-disabled$>><$=day$></button>'
             },
             holidays: [],               // 휴일 날짜 -> ['2014-04-05', '2014-05-12'],
             summary: '캘린더입니다. 글은 일요일, 월요일, 화요일, 수요일, 목요일, 금요일, 토요일 순으로 나옵니다.',
             colWidth: '32px', // 셀 너비
             caption: '달력',
             canSelectHoliday: false,		// 휴일을 선택하게 할 것인가,
-			customDaysTarget: null		// 휴일, 오늘, 토요일, 일요일 이외의 날짜를 표현할 경우, json를 담고 있는 script id를 지정
+            customDaysTarget: null		// 휴일, 오늘, 토요일, 일요일 이외의 날짜를 표현할 경우, json를 담고 있는 script id를 지정
         },
         events: {
 
@@ -5360,26 +5099,26 @@
             }
 
             me.isInline = !me.$el.is('button, input, a');
-            me.currDate = dateUtil.parse(me.options.showDate);
+            me.currDate = dateUtil.parse(me.options.date);
             me._normalizeOptions();
 
-			if(me.options.customDaysTarget) {
-				try {
-					var $data = $(me.options.customDaysTarget);
-					me.customDays = $.parseJSON($.trim($data.html()));
-				} catch(e) { console.error('[calendar] custom day의 값이 잘못 되었습니다.'); }
-				$data.remove();
-			}
+            if(me.options.customDaysTarget) {
+                try {
+                    var $data = $(me.options.customDaysTarget);
+                    me.customDays = $.parseJSON($.trim($data.html()));
+                } catch(e) { console.error('[calendar] custom day의 값이 잘못 되었습니다.'); }
+                $data.remove();
+            }
 
             if(me.isInline){
                 me._render();
             } else {
-				me.options.header = true;
-				if(me.options.inputTarget){
-					me.$input = $(me.options.inputTarget);
-				}
+                me.options.header = true;
+                if(me.options.inputTarget){
+                    me.$input = $(me.options.inputTarget);
+                }
                 me.off('.calendar').on('click.calendar', function(e){
-					e.preventDefault();
+                    e.preventDefault();
                     e.stopPropagation();
                     if(me.$calendar && me.$calendar.is(':visible')){
                         me.close();
@@ -5391,17 +5130,33 @@
         },
 
         _normalizeOptions: function() {
-            var me = this;
+            var me = this,
+                opts = me.options;
 
-            if(!core.isDate(me.options.today)) {
-                me.options.today = dateUtil.parse(me.options.today+'');
+            if(!core.isDate(opts.today)) {
+                opts.today = dateUtil.parse(opts.today+'');
             }
 
             //data-holidays속성을 이용한 경우 문자열로 넘어오기 때문에 배열로 변환해주어야 한다.
-            if(core.is(me.options.holidays, 'string')) {
+            if(core.is(opts.holidays, 'string')) {
                 try {
-                    me.options.holidays = eval(me.options.holidays);
-                } catch (e){ me.options.holidays = []; }
+                    opts.holidays = eval(opts.holidays);
+                } catch (e){ opts.holidays = []; }
+            }
+
+            if(opts.useSelectbox) {
+                var date = new Date;
+                if(/^[+-]/.test(opts.startSelectYear.toString())) {
+                    me.startSelectYear = date.getFullYear() + (opts.startSelectYear|0)
+                } else {
+                    me.startSelectYear = opts.startSelectYear|0;
+                }
+
+                if(/^[+-]/.test(opts.endSelectYear.toString())) {
+                    me.endSelectYear = date.getFullYear() + (opts.endSelectYear|0)
+                } else {
+                    me.endSelectYear = opts.endSelectYear|0;
+                }
             }
         },
 
@@ -5431,13 +5186,19 @@
             Calendar.active && Calendar.active.close();
             Calendar.active = this;
 
-			if(me.options.inputTarget) {
-				try {
-					me.currDate = dateUtil.parse(me.$input.val());
-				} catch(e) {
-					me.currDate = new Date;
-				}
-			}
+            if(me.options.inputTarget) {
+                var val = me.$input.val(),
+                    currDate = dateUtil.parse(me.$input.val());
+
+                if((val && val.length < 8) || isNaN(currDate.getTime())) {
+                    currDate = new Date;
+                }
+
+                if(me.options.header && me.options.useSelectbox) {
+                    currDate = me._checkValid(currDate);
+                }
+                me.currDate = currDate;
+            }
             me._render();
             me._reposition();
             me.show();
@@ -5469,7 +5230,7 @@
             var me = this;
 
             if(!me.isInline) {
-				if(me.$el.prop('disabled') || me.$el.hasClass('disabled')) { return; }
+                if(me.$el.prop('disabled') || me.$el.hasClass('disabled')) { return; }
 
                 $doc.on('click.calendar', function (e) {
                     if (me.$calendar[0].contains(e.target)) {
@@ -5480,41 +5241,41 @@
                     me.close();
                 });
 
-				if(!core.isTouch) {
-					me._escape();
+                if(!core.isTouch) {
+                    me._escape();
 
-					me.$calendar.on('focusin focusout', (function() {
-						var timer = null;
-						return function(e) {
-							clearTimeout(timer);
-							switch(e.type) {
-								case 'focusout':
-									timer = setTimeout(function() {
-										me.close();
-									}, 200);
-									break;
-							}
-						};
-					})());
-				}
+                    me.$calendar.on('focusin focusout', (function() {
+                        var timer = null;
+                        return function(e) {
+                            clearTimeout(timer);
+                            switch(e.type) {
+                                case 'focusout':
+                                    timer = setTimeout(function() {
+                                        me.close();
+                                    }, 200);
+                                    break;
+                            }
+                        };
+                    })());
+                }
                 me.$calendar.showLayer({opener: me.$el});
             }
 
             return me;
         },
 
-		_escape: function() {
-			var me = this;
+        _escape: function() {
+            var me = this;
 
-			me.$calendar.add(me.$el).add(me.$input)
-				.off('keyup.calendar').on('keyup.calendar', function(e) {
-				if(e.keyCode === core.keyCode.ESCAPE) {
-					me.close();
-					me.options.inputTarget && me.$input.focus();
-				}
-			});
+            me.$calendar.add(me.$el).add(me.$input)
+                .off('keyup.calendar').on('keyup.calendar', function(e) {
+                    if(e.keyCode === core.keyCode.ESCAPE) {
+                        me.close();
+                        me.options.inputTarget && me.$input.focus();
+                    }
+                });
 
-		},
+        },
 
         /**
          * DOM 삭제
@@ -5540,15 +5301,12 @@
                 opts = me.options,
                 timer, tmpl;
 
-            tmpl = '<div class="d-calendar-container">' +
+            tmpl = '<div class="m-calendar-container">' +
                 (opts.header !== false ?
-                    '<div class="d-calendar-header">' +
-                    opts.template.header +
-                    '</div>'
-                    :
-                    ''
-                    ) +
-                '<div class="d-calendar-date"></div>' +
+                    '<div class="m-calendar-header">' +
+                    (opts.header && opts.useSelectbox ? opts.template.selectHeader : opts.template.header) +
+                    '</div>' : '') +
+                '<div class="m-calendar-date"></div>' +
                 '</div>'
 
             me._remove();
@@ -5560,19 +5318,19 @@
                 // 모달
                 me.$calendar.css({
                     position: 'absolute',
-					backgroundColor: '#fff',
-					zIndex: 9999
+                    backgroundColor: '#fff',
+                    zIndex: 9999
                 });
                 me.$el.after(me.$calendar);
             }
             me.$calendar.off('.calendar')
-                .on('click.calendar mousedown.calendar', '.d-calendar-prev, .d-calendar-next', function(e){
-                    e.preventDefault();
-					if(me.$el.hasClass('disabled')){ return; }
-
+                .on('click.calendar mousedown.calendar', '.m-calendar-prev, .m-calendar-next', function(e){
                     // 이전 / 다음
+                    e.preventDefault();
+                    if(me.$el.hasClass('disabled')){ return; }
+
                     var $el = $(e.currentTarget),
-                        isPrev = $el.hasClass('d-calendar-prev');
+                        isPrev = $el.hasClass('m-calendar-prev');
 
                     switch (e.type) {
                         case 'click':
@@ -5592,11 +5350,11 @@
                             break;
                     }
                 })
-                .on('click.calendar', '.d-calendar-day', function(e) {
-                    e.preventDefault();
-					if(me.$el.hasClass('disabled')){ return; }
-
+                .on('click.calendar', '.m-calendar-day', function(e) {
                     // 날짜 클릭
+                    e.preventDefault();
+                    if(me.$el.hasClass('disabled')){ return; }
+
                     var $this = $(this).closest('td'),
                         data = $this.data(),
                         date = new Date(data.year, data.month - 1, data.day),
@@ -5606,32 +5364,65 @@
                     if(opts.inputTarget) {
                         me.$input.val(format)
                     }
-					
-					e = $.Event('calendarselected');
-					e.target = e.currentTarget = this;
+
+                    e = $.Event('calendarselected');
+                    e.target = e.currentTarget = this;
                     me.$el.triggerHandler(e, {
+                        target: $(this).find('a, button').get(0),
                         year: $this.data('year'),
                         month: $this.data('month'),
                         day: $this.data('day'),
                         value: format,
                         date: date,
-						calendar: me.$calendar[0]
+                        calendar: me.$calendar[0]
                     });
 
-					if(me.isInline){
-						me.$calendar.find('.d-calendar-active').removeClass('d-calendar-active');
-						$this.addClass('d-calendar-active');
-					}
+                    if(me.isInline){
+                        me.$calendar.find('.m-calendar-active').removeClass('m-calendar-active');
+                        $this.addClass('m-calendar-active');
+                    }
 
                     if(!e.isDefaultPrevented() && !me.isInline) {
                         me.close();
+                        me.$el.focus();
                     }
 
                 });
 
+            if(opts.header && opts.useSelectbox) {
+                me.$yearSelectbox = me.$calendar.find('.m-calendar-years');
+                me.$monthSelectbox = me.$calendar.find('.m-calendar-months');
+
+                me.$yearSelectbox[0].options.length = 0;
+                for(var i = me.startSelectYear; i <= me.endSelectYear; i++) {
+                    me.$yearSelectbox[0].options.add(new Option(i, i));
+                }
+
+                me.$yearSelectbox.add(me.$monthSelectbox).off('change.calendar').on('change.calendar', function(e) {
+                    var year = me.$yearSelectbox.val(),
+                        month = me.$monthSelectbox.val();
+
+                    me.currDate.setYear(year|0);
+                    me.currDate.setMonth((month|0) - 1);
+
+                    me._renderDate();
+                });
+            }
+
             me._renderDate();
 
             return me;
+        },
+
+        _selectCurrentDate: function(){
+            var me = this,
+                opts = me.options;
+
+            if(!opts.header || !opts.useSelectbox) { return; }
+
+            me.$yearSelectbox.val(me.currDate.getFullYear());
+            me.$monthSelectbox.val(me.currDate.getMonth() + 1);
+
         },
 
         release: function() {
@@ -5664,6 +5455,15 @@
             return false;
         },
 
+        _checkValid: function(date) {
+            var me = this,
+                opts = me.options;
+
+            if(me.startSelectYear > date.getFullYear()) { return new Date(me.startSelectYear, 0, 1); }
+            if(me.endSelectYear < date.getFullYear()) { return new Date(me.endSelectYear, 11, 1); }
+            return date;
+        },
+
         /**
          * 달력 그리기
          * @returns {Calendar}
@@ -5681,14 +5481,14 @@
                 isOtherMonth = false,
                 i, j, y, m, d, week, len, cell;
 
-            html += '<table class="d-calendar-table" border="1" summary="'+opts.summary+'"><caption>'+opts.caption+'</caption>';
+            html += '<table class="m-calendar-table" border="1" summary="'+opts.summary+'"><caption>'+opts.caption+'</caption>';
             html += '<colgroup>';
             for(i = 0; i < 7; i++) {
                 html += '<col width="'+opts.colWidth+'" />';
             }
             html += '</colgroup><thead>';
             for(i = 0; i < 7; i++) {
-                html += '<th class="d-calendar-dayname ' + (i === 0 ? ' d-calendar-sunday' : i === 6 ? ' d-calendar-saturday' : '') + '" scope="col">';
+                html += '<th class="m-calendar-dayname ' + (i === 0 ? ' m-calendar-sunday' : i === 6 ? ' m-calendar-saturday' : '') + '" scope="col">';
                 html += opts.weekNames[i];
                 html += '</th>';
             }
@@ -5706,22 +5506,22 @@
 
                     if(beforeRenderDay){
                         cell = beforeRenderDay.call(me, y, m, d, {
-							isSaturday: j === 6,
-							isSunday: j === 0,
-							isHoliday: isHoliday, 
-							isToday: isToday, 
-							isOtherMonth: isOtherMonth}) || {cls:'', html:'', disabled:''};
+                            isSaturday: j === 6,
+                            isSunday: j === 0,
+                            isHoliday: isHoliday,
+                            isToday: isToday,
+                            isOtherMonth: isOtherMonth}) || {cls:'', html:'', disabled:''};
                     } else {
                         cell = {cls:'', html:'', disabled:''};
                     }
 
-					cell.cls = (me.customDays ? ' '+me._getClassCustomDay(y, m, d) : '');
+                    cell.cls = (me.customDays ? ' '+me._getClassCustomDay(y, m, d) : '');
 
-                    html += '<td class="d-calendar-'+ y+m+d+' d-calendar-cell' 
-						+ (isHoliday ? ' d-calendar-holiday' : '')
-                        + (j === 0 ? ' d-calendar-sunday' : j === 6 ? ' d-calendar-saturday' : '')
-                        + (isToday ? ' d-calendar-today' : '')
-                        + (isOtherMonth ? ' d-calendar-other' : '')
+                    html += '<td class="m-calendar-'+ y+m+d+' m-calendar-cell'
+                        + (isHoliday ? ' m-calendar-holiday' : '')
+                        + (j === 0 ? ' m-calendar-sunday' : j === 6 ? ' m-calendar-saturday' : '')
+                        + (isToday ? ' m-calendar-today' : '')
+                        + (isOtherMonth ? ' m-calendar-other' : '')
                         + cell.cls
                         + '" data-year="'+y+'" data-month="'+m+'" data-day="'+d+'">';
 
@@ -5729,15 +5529,17 @@
                         if (cell.html) {
                             html += cell.html;
                         } else {
+                            var nowd = new Date(y, m - 1, d);
                             html += tmpl({
-                                title: dateUtil.format(new Date(y, m - 1, d), opts.titleFormat),
+                                title: dateUtil.format(nowd, opts.titleFormat),
                                 isHoliday: isHoliday,
                                 isToday: isToday,
                                 isOtherMonth: isOtherMonth,
                                 isSunday: j === 0,
                                 isSaturday: j === 6,
                                 disabled: isHoliday || cell.disabled ? ' disabled="disabled" ' : '',
-                                day: d
+                                day: d,
+                                date: nowd
                             });
                         }
                     } else {
@@ -5749,60 +5551,64 @@
             } // for
             html += '</tbody></table>';
 
-            me.$calendar.find('.d-calendar-date').html(html);
-            me.$calendar.find('.d-calendar-text').text(dateUtil.format(me.currDate, 'yyyy-MM'));
+            me.$calendar.find('.m-calendar-date').html(html);
+            me.$calendar.find('.m-calendar-text').text(dateUtil.format(me.currDate, 'yyyy-MM'));
+
+            if(opts.header && opts.useSelectbox){
+                me._selectCurrentDate();
+            }
 
             return me;
         },
 
-		_getClassCustomDay: function(y, m, d) {
-			var me = this,
-				cls = '';
+        _getClassCustomDay: function(y, m, d) {
+            var me = this,
+                cls = '';
 
-			m = m - 1;
-			core.each(me.customDays, function(item, key) {
-				var date;
-				for(var i = 0; i < item.length; i++) {
-					date = dateUtil.parse(item[i]);
-					if(date.getFullYear() === y && date.getMonth() === m && date.getDate() === d) {
-						cls = key;
-						return false;
-					}
-				}
-			});
-			return cls;
-		},
+            m = m - 1;
+            core.each(me.customDays, function(item, key) {
+                var date;
+                for(var i = 0; i < item.length; i++) {
+                    date = dateUtil.parse(item[i]);
+                    if(date.getFullYear() === y && date.getMonth() === m && date.getDate() === d) {
+                        cls = key;
+                        return false;
+                    }
+                }
+            });
+            return cls;
+        },
 
-		setCustomDays: function(data) {
-			this.customDays = data;
-			this.refresh();
-		},
+        setCustomDays: function(data) {
+            this.customDays = data;
+            this.refresh();
+        },
 
-		refresh: function(){
-			this._renderDate();
-		},
+        refresh: function(){
+            this._renderDate();
+        },
 
         findDateCell: function(day) {
             return this.$calendar.find('.data-'+day.getFullYear()+''+(day.getMonth() + 1)+''+day.getDate());
         },
 
-		enable: function() {
-			var me = this;
-			if(me.options.inputTarget) {
-				me.$input.disabled(false);
-			}
-			me.$el.disabled(false);
-		},
+        enable: function() {
+            var me = this;
+            if(me.options.inputTarget) {
+                me.$input.disabled(false);
+            }
+            me.$el.disabled(false);
+        },
 
-		disable: function() {
-			var me = this;
+        disable: function() {
+            var me = this;
 
-			me.close();
-			if(me.options.inputTarget) {
-				me.$input.disabled(true);
-			}
-			me.$el.disabled(true);
-		},
+            me.close();
+            if(me.options.inputTarget) {
+                me.$input.disabled(true);
+            }
+            me.$el.disabled(true);
+        },
 
         /**
          * 날짜 변경
@@ -5818,7 +5624,11 @@
             }
 
             try {
-                me.currDate = core.is(date, 'date') ? date : dateUtil.parse(date);
+                var currDate = core.is(date, 'date') ? date : dateUtil.parse(date);
+                if(me.options.header && me.options.useSelectbox){
+                    currDate = me._checkValid(currDate);
+                }
+                this.currDate = currDate;
                 me._renderDate();
             } catch(e) {
                 throw new Error('Calendar#setDate(): 날짜 형식이 잘못 되었습니다.');
@@ -5843,15 +5653,15 @@
             } else {
                 return;
             }
-			
-			/*
-            me.$calendar.find('.d-calendar-holiday').removeClass('d-calendar-holiday');
-            core.each(me.options.holidays, function(day, i) {
-                day = dateUtil.parse(day);
-                me.findDateCell(day).addClass('d-calendar-holiday');
-            });
-			*/
-			me._renderDate();
+
+            /*
+             me.$calendar.find('.m-calendar-holiday').removeClass('m-calendar-holiday');
+             core.each(me.options.holidays, function(day, i) {
+             day = dateUtil.parse(day);
+             me.findDateCell(day).addClass('m-calendar-holiday');
+             });
+             */
+            me._renderDate();
         },
 
         /**
@@ -5871,15 +5681,15 @@
             var to = me.options.today,
                 cur = me.currDate;
 
-			me._renderDate();
-			/*
-            me.$calendar.find('td.d-calendar-today').removeClass('d-calendar-today');
-            if(to.getFullYear() === cur.getFullYear()
-                && to.getMonth() === cur.getMonth()) {
-                // 오늘날짜가 현재월에 해당하면, 활성화 해줌
-                me.findDateCell(to).addClass('d-calendar-today');
-            }
-			*/
+            me._renderDate();
+            /*
+             me.$calendar.find('td.m-calendar-today').removeClass('m-calendar-today');
+             if(to.getFullYear() === cur.getFullYear()
+             && to.getMonth() === cur.getMonth()) {
+             // 오늘날짜가 현재월에 해당하면, 활성화 해줌
+             me.findDateCell(to).addClass('m-calendar-today');
+             }
+             */
         },
 
         /**
@@ -5890,13 +5700,22 @@
             return this.options.today;
         },
 
+        getCurrentDate: function() {
+            return this.currDate;
+        },
+
         /**
          * 이전달
          * @returns {Calendar}
          */
         prev: function(){
-            this.currDate.setMonth(this.currDate.getMonth() - 1);
-            this._renderDate();
+            var me = this,
+                currDate = core.date.add(me.currDate, 'M', -1);
+            if(me.options.header && me.options.useSelectbox){
+                currDate = me._checkValid(currDate);
+            }
+            me.currDate = currDate;
+            me._renderDate();
 
             return this;
         },
@@ -5906,8 +5725,13 @@
          * @returns {Calendar}
          */
         next: function() {
-            this.currDate.setMonth(this.currDate.getMonth() + 1);
-            this._renderDate();
+            var me = this,
+                currDate = core.date.add(me.currDate, 'M', 1);
+            if(me.options.header && me.options.useSelectbox){
+                currDate = me._checkValid(currDate);
+            }
+            me.currDate = currDate;
+            me._renderDate();
 
             return this;
         },
@@ -5983,19 +5807,10 @@
             return (((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0))
         }
     });
-
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
-
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        strUtil = core.string,
-        dateUtil = core.date,
-        numberUtil = core.number;
+    ///////////////////////////////////////////////////////////////////////////////////////
 
 
+    //Paginate ////////////////////////////////////////////////////////////////////////////
     /**
      * @class
      * @name jCore.ui.Paginate
@@ -6178,7 +5993,10 @@
             me.callParent();
         }
     });
+    ///////////////////////////////////////////////////////////////////////////////////////
 
+
+    //AjaxList ////////////////////////////////////////////////////////////////////////////
     /*
      ////////////////////////////////////////////////////////
      // 본 코드는 스크립트파트에서 그냥 작성해본 샘플입니다.
@@ -6201,7 +6019,7 @@
      });
      /////////////////////////////////////////////////////////
      */
-    var AjaxList = ui('AjaxList', {
+    var AjaxList = ui('AjaxList', /** @lends jCore.ui.AjaxList# */ {
         defaults: {
         },
         initialize: function(el, options) {
@@ -6269,18 +6087,10 @@
             });
         }
     });
+    ///////////////////////////////////////////////////////////////////////////////////////
 
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        strUtil = core.string,
-        dateUtil = core.date,
-        numberUtil = core.number;
-
+    //Placeholder /////////////////////////////////////////////////////////////////////////
     /**
      * placeholder를 지원하지 않는 IE7~8상에서 placeholder효과를 처리하는 클래스
      * @class
@@ -6304,25 +6114,29 @@
          */
         initialize: function (el, options) {
             var me = this,
-                is = 'placeholder' in core.tmpInput;
+                is = ('placeholder' in core.tmpInput);
 
-            if ( is ) { return me.release(); }
-            if(me.callParent(el, options) === false) {
-                // 암호인풋인 경우 백그라운으로 처리
-                if(me.$el.attr('type') === 'password') {
-                    me.$el.addClass(me.options.placeholderClass);
-                } else {
-                    me.$el.val(me.$el.attr('placeholder'));
-                }
-                return me.release();
-            }
+            if ( (options && options.force !== true) && is ) { return; }
+
+            if(me.callParent(el, options) === false) { return; }
+
             me.placeholder = me.$el.attr('placeholder');
+
+            me.$el.removeAttr('placeholder').attr('ori-placeholder', me.placeholder);
+            me.placeholder = me.placeholder.replace(/\\r\\n/g, "\r\n").replace(/\\n/g, "\n");
             me._foreColor = me.options.foreColor;
 
             var isPassword = me.$el.attr('type') === 'password';
+            if(isPassword) {
+                // 암호인풋인 경우 백그라운으로 처리
+                me.$el.addClass(me.options.placeholderClass);
+            } else {
+                me.$el[0].value = me.placeholder;
+            }
 
             me.on('focusin click', function () {
-                if (strUtil.trim(this.value) === me.placeholder || !$.trim(this.value)) {
+                var val = me.options.force === true ? this.value.replace(/\r/g, '') : this.value;
+                if (strUtil.trim(val) === me.placeholder || !$.trim(val)) {
                     me.$el.removeClass(me._foreColor);
                     // 암호요소인 경우 백그라운드로 처리
                     if(isPassword) {
@@ -6332,7 +6146,8 @@
                 }
             });
             me.on('focusout', function () {
-                if (this.value === '' || this.value === me.placeholder) {
+                var val = me.options.force === true ? this.value.replace(/\r/g, '') : this.value;
+                if (val === '' || val === me.placeholder) {
                     if(isPassword) {
                         me.$el.val('').addClass(me.options.placeholderClass);
                     } else {
@@ -6353,7 +6168,7 @@
         /**
          * 파괴자 : 자동으로 호출되지 않으므로, 필요할 때는 직접 호출해주어야 한다.
          */
-        destroy: function () {
+        release: function () {
             var me = this;
 
             me.$el.removeData();
@@ -6363,318 +6178,20 @@
 
     if(!('placeholder' in core.tmpInput)) {
         $doc.on('submit.placeholder', 'form', function(e) {
-            $('input[placeholder], textarea[placeholder]').each(function() {
-                var $el;
-                if (($el = $(this)).attr('placeholder') === this.value) {
+            $('input[placeholder], textarea[placeholder], textarea[ori-placeholder]').each(function() {
+                var $el = $(this),
+                    txtPlaceholder = $el.attr('placeholder') || $el.data('ori-placeholder');
+                if (txtPlaceholder === this.value) {
                     $el.removeClass(Placeholder.prototype.defaults.foreColor);
                     this.value = '';
                 }
             });
         });
     }
+    ///////////////////////////////////////////////////////////////////////////////////////
 
 
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
-
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        browser = core.browser,
-        isTouch = browser.isTouch;
-
-    /**
-     * 커스텀스크롤이 붙은 컨텐츠담당 클래스
-     * @class
-     * @name jCore.ui.ScrollView
-     * @extends jCore.ui.View
-     * @example
-     * new ScrollView('select.d_name', {});
-     */
-    var ScrollView = ui('ScrollView', /**@lends jCore.ui.ScrollView# */{
-        selectors: {
-
-        },
-        defaults: {
-            scrollViewClass: 'd-scrollview',
-            scrollBarClass: 'd-scrollbar',
-            scrollContentClass: 'd-scrollcontent'
-        },
-        /**
-         * 생성자
-         * @param {String|Element|jQuery} el 해당 엘리먼트(노드, id, jQuery 어떤 형식이든 상관없다)
-         * @param {Object} options 옵션값
-         */
-        initialize: function(el, options) {
-            var me = this;
-
-            if(me.callParent(el, options) === false) { return me.release(); }
-
-            if(!me.$el.has('.'+me.options.scrollViewClass)) {
-                me._createScrollbar();
-            }
-
-            // 스크롤 컨테이너
-            me.$scrollView = me.$('.'+me.options.scrollViewClass);
-            // 스크롤바
-            me.$scrollBar = me.$('.'+me.options.scrollBarClass);
-            // 컨텐츠
-            me.$content = me.$('.'+me.options.scrollContentClass);
-
-            me._configure();
-            me._isMouseEnter = false;
-            me._isMouseDown = false;
-            me.isScrollForceHide = false;
-
-            me.$scrollBar.parent().hide();
-
-            if( isTouch ) {
-                // 터치기반 디바이스일 때, 터치이벤트 바인딩
-                me._bindTouch();
-            } else {
-                me._bindMouse();
-            }
-
-            me.update();
-        },
-
-        _createScrollbar: function() {
-            var me = this;
-
-            me.$el.append('<div class="scroll_wrap" style="display: none;">' +
-                '<div class="scroll '+me.options.scrollBarClass+'" style="height: 94px; top: 0px;">' +
-                '<div class="body" style="height: 100px;"></div>' +
-                '<div class="bottom"></div>' +
-                '</div></div>');
-        },
-
-        /**
-         * 마우스기반 디바이스에서는 마우스 이벤트 바인딩
-         * @private
-         */
-        _bindMouse: function() {
-            var me = this;
-
-            // 스크롤바 드래그 시작 준비
-            me.on('mousedown', '.'+me.options.scrollBarClass, function(e){
-                e.preventDefault();
-                if(isTouch){
-                    e.stopPropagation();
-                }
-
-                me._isMouseDown = true;
-                me._currY = parseInt($(this).css('top'), 10);
-                me._downY = me._getY(e);    // 마우스의 y 위치
-
-                // 글로벌 이벤트 등록
-                me._bindDocEvent();
-                return false;
-            });
-
-            // 스크롤 시, 커스텀스크롤바 위치 조절
-            me.on('scroll', '.'+me.options.scrollViewClass, function(){
-                if(!me._isMouseDown) { // 마우스휠에 의한 스크롤일 때만 스크롤바 위치 조절
-                    me.update();
-                }
-            });
-            me.on('mousewheel DOMMouseScroll', '.'+me.options.scrollViewClass, function(e) {
-                // 마우스 휠로 스크롤링 할때 내부컨텐츠 scrollTop 갱신
-                e.preventDefault();
-                e = e.originalEvent;
-                var delta = e.wheelDelta || -e.detail;
-
-                me.$scrollView.scrollTop(me.$scrollView.scrollTop() - delta);
-            });
-            // 탭키로 리스트에 접근했을 때, 스크롤바를 표시....
-            // (timer를 쓰는 이유는 포커스가 옮겨질때마다 레이아웃을 새로 그려지는 걸 방지하기 위함으로,
-            // ul내부에 포커스가 처음 들어올 때, 마지막으로 빠져나갈 때만 발생한다.)
-            me.on('focusin focusout', '.'+me.options.scrollContentClass, (function() {
-                var timer = null;
-                return function(e) {
-                    clearTimeout(timer), timer = null;
-                    if(e.type === 'focusin') {
-                        !me._isMouseEnter && (timer = setTimeout(function(){
-                            me.$el.triggerHandler('mouseenter');
-                        }, 200));
-                    } else {
-                        me._isMouseEnter && (timer = setTimeout(function(){
-                            me.$el.triggerHandler('mouseleave');
-                        }, 200));
-                    }
-                };
-            })());
-
-            me.on('mouseenter mouseleave', function(e){
-                if(e.type === 'mouseenter' && !me.isScrollForceHide){
-                    // 마우스가 컨텐츠영역 안으로 들어올 때 스크롤 위치를 계산후, 표시
-                    me._isMouseEnter = true;
-                    me._configure();
-                    me._toggleScrollbar(true);
-                } else {
-                    // 마우스가 컨텐츠영역 밖으로 벗어날 때 숨김
-                    me._isMouseEnter = false;
-                    if(!me._isMouseDown) { me._toggleScrollbar(false); }
-                }
-            });
-        },
-
-        /**
-         * 터치기반 디바이스에서는 터치이벤트 바인딩
-         * @private
-         */
-        _bindTouch: function() {
-            var me = this,
-                $con = me.$scrollView,
-                scrollTop = 0,
-                startY = 0;
-
-            me.on('touchstart touchmove touchend touchcancel', '.'+me.options.scrollViewClass+'>ul', function(e) {
-                var oe = e.originalEvent;
-                if(oe.touches.length != 1) { return; }
-                var touchY = oe.touches[0].pageY;
-
-                switch(e.type) {
-                    case 'touchstart':
-                        scrollTop = $con.scrollTop();
-                        startY = touchY;
-                        break;
-                    case 'touchmove':
-                        e.preventDefault();
-                        e.stopPropagation();
-                        $con.scrollTop(scrollTop + (startY - touchY));
-                        break;
-                    default:
-                        break;
-                }
-            });
-        },
-
-        /**
-         * 스크롤바 드래그를 위한 글로벌 이벤트 바인딩
-         * @private
-         */
-        _bindDocEvent: function() {
-            var me = this;
-
-            $doc.off('.scrollview').on('mouseup.scrollview touchend.scrollview mousemove.scrollview touchmove.scrollview', function(e){
-                switch(e.type){
-                    case 'mouseup':
-                    case 'touchend':
-                        // 드래그 끝
-                        me._isMouseDown = false;
-                        me._moveY = 0;
-
-                        $doc.off('.scrollview');
-                        if(!me._isMouseEnter) { me._toggleScrollbar(false); }
-                        break;
-                    case 'mousemove':
-                    case 'touchmove':
-                        // 드래그 중
-                        me._moveY = me._getY(e);
-                        me._move(me._currY - (me._downY - me._moveY));
-
-                        e.preventDefault();
-                        break
-                }
-            });
-        },
-        /**
-         * 현 시점에 컨텐츠 길이와 컨테이너 길이를 바탕으로 스크롤바 사이즈와 위치를 재계산
-         * @private
-         */
-        _configure: function(){
-            var me = this;
-
-            me._moveY = 0;
-            me._containerHeight = me.$scrollView.height();                                      // 컨테이너 높이
-            me._contentHeight = me.$content.innerHeight();                                              // 컨텐츠 높이
-            me._scrollRate =  me._containerHeight / me._contentHeight;                      // 스크롤 사이즈 비율
-            me._scrollBarHeight = me._containerHeight * me._scrollRate;                     // 스크롤바 크기
-            if( me._scrollBarHeight < 20 ) {                                                                // 최소 크기: 20
-                me._scrollRate = (me._containerHeight - (20 - me._scrollBarHeight)) / me._contentHeight;
-                me._scrollBarHeight = 20;
-            }
-            me._scrollHeight = me._containerHeight - me._scrollBarHeight;                   // 실제 스크롤 영역 크기
-            me._contentTop = me.$scrollView.scrollTop();                                            // 현재 컨텐츠의 scrollTop
-        },
-
-        /**
-         * _configure에서 계산된 값을 바탕으로 스크롤바 위치 조절
-         * @private
-         */
-        _scrollLayout: function(){
-            var me = this;
-            // 컨텐츠가 컨테이너보다 클 경우에만...
-            if(me._contentHeight > me._containerHeight){
-                me.$scrollBar.css({
-                    'height': me._scrollBarHeight,
-                    'top': Math.min(me._contentTop * me._scrollRate, me._scrollHeight)
-                }).children('div.body').css('height', me._scrollBarHeight - 6);
-            }
-        },
-
-        /**
-         * 스크롤바 표시 토글링
-         * @private
-         * @param {Boolean} isShow 표시여부
-         */
-        _toggleScrollbar: function(isShow) {
-            var me = this;
-            if(me._contentHeight < me._containerHeight){
-                me.$scrollBar.parent().hide();
-            } else {
-                me._scrollLayout();
-                me.$scrollBar.parent().toggle(isShow);
-            }
-        },
-        /**
-         * 드래그 시 호출되는 함수
-         * @private
-         * @param {Integer} top 마우스의 y 위치
-         */
-        _move: function(top) {
-            var me = this;
-
-            top = Math.max(0, Math.min(top, me._scrollHeight));
-
-            me.$scrollBar.css('top', top);
-            me.$scrollView.scrollTop((me._contentHeight - me._containerHeight) * (top / me._scrollHeight));
-        },
-
-        /**
-         * 터치이벤트, 마우스이벤트에 따른 y좌표값 반환(_bindDocEvent에서 호출됨)
-         * @param {jQuery#Event} e jquery 이벤트
-         * @return {Integer}
-         */
-        _getY: function(e) {
-            if(isTouch && e.originalEvent.touches){
-                e = e.originalEvent.touches[0];
-            }
-            return e.pageY;
-        },
-        /**
-         * 스크롤를 다시 계산하여 표시하기
-         */
-        update: function(){
-            var me = this;
-
-            me._configure();
-            me._scrollLayout();
-
-            return this;
-        }
-    });
-
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
-
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        isTouch = core.browser.isTouch;
-
+    //Selectbox////////////////////////////////////////////////////////////////////////////
     /**
      * 커스텀 셀렉트박스<br />
      * wrapClasses: ''<br />
@@ -7039,18 +6556,9 @@
             me.$el.off('change.selectbox').show();
         }
     });
+    ///////////////////////////////////////////////////////////////////////////////////////
 
-})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
-
-(function($, core, ui, undefined) {
-    "use strict";
-
-    var $win = core.$win,
-        $doc = core.$doc,
-        strUtil = core.string,
-        dateUtil = core.date,
-        numberUtil = core.number;
-
+    //Tab ////////////////////////////////////////////////////////////////////////////////
     /**
      * @class
      * @name jCore.ui.Tab
@@ -7084,7 +6592,7 @@
             if(me.callParent(el, options) === false) { return me.release(); }
 
             me.$tabs = me.$el.is('ul') ? me.$('>li') : me.$('>ul>li');
-            me.$tabs.on('click', '>a', function(e) {
+            me.$tabs.on('click', '>a, >button', function(e) {
                 e.preventDefault();
 
                 me.selectTab($(e.currentTarget).parent().index());
@@ -7139,11 +6647,13 @@
 
         },
 
-        selectTab: function(index) {
-            var me = this;
-            if(index < 0 || (me.$tabs.length && index >= me.$tabs.length)) {
-                throw new Error('index 가 범위를 벗어났습니다.');
+        activeTab: function(index) {
+            var me = this, e;
+            if(index < 0){ index = 0; }
+            if(me.$tabs.length && index >= me.$tabs.length) {
+                index = me.$tabs.length - 1;
             }
+
 
             me.$tabs.eq(index).activeItem(me.options.onClassName);
 
@@ -7151,10 +6661,28 @@
             if(me.options.tabType === 'outer' && me.$contents) {
                 me.$contents.hide().eq(index).show();
             }
+        },
 
+        selectTab: function(index) {
+            var me = this, e;
+            if(index < 0 || (me.$tabs.length && index >= me.$tabs.length)) {
+                throw new Error('index 가 범위를 벗어났습니다.');
+            }
+
+            me.triggerHandler(e = $.Event('tabchange'), {selectedIndex: index});
+            if(e.isDefaultPrevented()) { return; }
+
+            me.$tabs.eq(index).activeItem(me.options.onClassName);
+
+            // 컨텐츠가 li바깥에 위치한 탭인 경우
+            if(me.options.tabType === 'outer' && me.$contents) {
+                me.$contents.hide().eq(index).show();
+            }
             me.triggerHandler('tabchanged', {selectedIndex: index});
+
         }
     });
+    ///////////////////////////////////////////////////////////////////////////////////////
 
 })(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
@@ -7211,14 +6739,15 @@
             slideTime: 300,
             foldOthers: true,
             defaultOpenIndex:-1,
-			isMoveTop: false
+            isMoveTop: false
         },
 
         selectors: {
             list : ".d-accord-content",
             toggleClassTarget: ".d-accord-content",
             toggleButton : ".d-toggle-button",
-            content : ".cont"
+            content : ".cont",
+            closeButton: ".d-close"
         },
 
         events: {
@@ -7311,6 +6840,13 @@
                     me.expand( index );
                 }
             });
+
+            this.$el.on("click", this.selectors.closeButton, function(e){
+                e.preventDefault();
+                var $targetList = $(this).closest(me.selectors.list);
+                var index = me.$list.index($targetList);
+                me.fold( index, me.options.duration );
+            });
         },
 
         /**
@@ -7321,7 +6857,7 @@
             var time = (dist/value)*this.options.slideTime;
             if( time < 200 ){  time = 200 };
             if( time > 700 ){  time = 700 };
-            return time;
+            return Math.round(time);
         },
 
         /**
@@ -7335,6 +6871,7 @@
                 return;
             }
 
+            this.trigger( ui.AccordionListEvent.EXPAND );
             var $targetCont = targetData.$targetCont,
                 $scaleTarget = targetData.$scaleTarget,
                 $classTarget = targetData.$classTarget;
@@ -7343,22 +6880,23 @@
             $scaleTarget.removeClass( this.options.noneClass );
             $classTarget.addClass( this.options.selectedClass );
 
-            var duration = this.options.slideTime;
+            $scaleTarget.height("");
+            var targetHeight = $scaleTarget.outerHeight();
+            var duration = this._getDuration(targetHeight,700);//this.options.slideTime;
+
             if( this.options.foldOthers && index != this.currentIndex ){
                 this.isAniComplete = true;
                 this._slideFold( this.currentIndex, duration );
             }
 
-            $scaleTarget.stop().height(0).animate({"height":$scaleTarget.children().outerHeight() }, duration, $.proxy(function(){
+            $scaleTarget.stop().height(0).animate({"height": targetHeight }, duration, $.proxy(function(){
                 this.isAniComplete = true;
                 this.trigger( ui.AccordionListEvent.EXPANDED );
                 $scaleTarget.height("");
-
-				if(this.options.isMoveTop) {
-					$('html, body').stop().animate({'scrollTop': $classTarget.offset().top}, 'fast');
-				}
+                if(this.options.isMoveTop) {
+                    $('html, body').stop().animate({'scrollTop': $classTarget.offset().top},  300 );
+                }
             }, this));
-
 
             this.currentIndex = index;
         },
@@ -7406,20 +6944,21 @@
                 return;
             }
 
+            this.trigger( ui.AccordionListEvent.FOLD );
             var $targetCont = targetData.$targetCont,
                 $scaleTarget = targetData.$scaleTarget,
                 $classTarget = targetData.$classTarget;
 
             this.isAniComplete = false;
 
-            $classTarget.removeClass( this.options.selectedClass );
+
             if( duration == undefined ){
                 duration = this.options.slideTime;
-                //duration = this._getDuration( $scaleTarget.height(), 500);
             }
 
             $scaleTarget.stop().animate({"height":0 }, duration, $.proxy(function(){
                 $scaleTarget.addClass( this.options.noneClass );
+                $classTarget.removeClass( this.options.selectedClass );
                 this.trigger( ui.AccordionListEvent.FOLDED );
                 this.isAniComplete = true;
             },this));
@@ -7436,6 +6975,7 @@
                 return;
             }
 
+            this.trigger( ui.AccordionListEvent.EXPAND );
             var $targetCont = targetData.$targetCont,
                 $scaleTarget = targetData.$scaleTarget,
                 $classTarget = targetData.$classTarget;
@@ -7448,11 +6988,13 @@
             }
             $scaleTarget.removeClass( this.options.noneClass );
 
-			if(this.options.isMoveTop) {
-				$('html, body').scrollTop($classTarget.offset().top);
-			}
+            if(this.options.isMoveTop) {
+                $('html, body').scrollTop($classTarget.offset().top);
+            }
+
 
             this.currentIndex = index;
+            this.trigger( ui.AccordionListEvent.EXPANDED );
         },
 
         /**
@@ -7466,12 +7008,15 @@
                 return;
             }
 
+            this.trigger( ui.AccordionListEvent.FOLD );
+
             var $targetCont = targetData.$targetCont,
                 $scaleTarget = targetData.$scaleTarget,
                 $classTarget = targetData.$classTarget;
 
             $classTarget.removeClass( this.options.selectedClass );
             $scaleTarget.addClass( this.options.noneClass );
+            this.trigger( ui.AccordionListEvent.FOLDED );
         },
 
         release: function(){
@@ -7480,8 +7025,134 @@
     });
 })(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
+(function($, core, ui, undefined) {
+    "use strict";
 
+    var $doc = core.$doc,
+        win = window;
 
+    var s = {
+        PC: 1,
+        MOBILE: 2,
+        APP: 4
+    };
+
+    core.sns = {
+        types: { //['facebook', 'twitter', 'kakaotalk', 'kakaostory'/* , 'googleplus'*/],
+            'facebook': {
+                name: '페이스북',
+                support: s.PC | s.MOBILE,
+                baseUrl: 'https://www.facebook.com/sharer.php?',
+                makeParam: function(data) {
+                    return 'u=' + encodeURIComponent(data.url) + (data.title && '&t=' + encodeURIComponent(data.title));
+                }
+            },
+            'twitter': {
+                name: '트위터',
+                support: s.PC | s.MOBILE,
+                baseUrl: 'https://twitter.com/intent/tweet?',
+                makeParam: function(data) {
+                    return 'text=' + encodeURIComponent(data.title + ' ' + data.url);
+                }
+            },
+            'kakaotalk': {
+                name: '카카오톡',
+                support: s.APP | s.MOBILE,
+                makeParam: function(data) {
+                    return {
+                        msg: data.title+' '+(data.desc||''),
+                        url: data.url,
+                        appid: "jCore store",
+                        appver: "0.1",
+                        type: "link",
+                        appname: "이마트스토어"
+                    };
+                }
+            },
+            'kakaostory': {
+                name: '카카오스토리',
+                support: s.APP | s.MOBILE,
+                makeParam: function(data) {
+                    return {
+                        post: data.url,
+                        appid: "jCore store",
+                        appver: "0.1",
+                        apiver: "1.0",
+                        appname: "이마트 스토어",
+                        urlinfo: core.json.stringify({
+                            title: data.title,
+                            desc: data.desc,
+                            imageurl: [data.image],
+                            type: "website"
+                        })
+                    };
+                }
+            },
+            'line': {
+                name: '라인',
+                support: s.APP | s.MOBILE,
+                baseUrl: 'line://msg/text/',
+                store: {
+                    android: {
+                        intentPrefix: "intent://msg/text/",
+                        intentSuffix: "#Intent;scheme=line;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;package=jp.naver.line.android;end"
+                    },
+                    ios: "http://itunes.apple.com/jp/app/line/id443904275"
+                },
+                makeParam: function(data) {
+                    return '';
+                }
+            },
+            'googleplus': {
+                name: '구글플러스',
+                support: s.PC | s.MOBILE,
+                baseUrl: 'https://plus.google.com/share?',
+                makeParam: function(data) {
+                    return 'url=' + encodeURIComponent(data.title + ' ' + data.url);
+                }
+            }
+        },
+
+        share: function(type, params) {
+            var service = this.types[type];
+            if(!service){ return; }
+
+            params.url = (params.url+'').replace(/#$/g, '');
+            params.url = params.url || location.href.replace(/#$/g, '');
+            params.title = params.title||document.title;
+
+            if(!core.browser.isMobile && service.support&s.MOBILE === 0) {
+                alert("‘"+service.name+"’으로의 공유 기능은\n모바일 기기에서만 사용하실 수 있습니다");
+                return;
+            }
+
+            this._send(type, params);
+        },
+
+        _send: function (type, params) {
+            var service = this.types[type];
+            if(!service){ return; }
+
+            switch(type) {
+                case 'facebook':
+                case 'twitter':
+                    window.open(
+                            service.baseUrl + service.makeParam(params),
+                        'sns',
+                        'menubar=no,height=300, width=550'
+                    );
+                    break;
+                case 'kakaotalk':
+                    kakao&&kakao.link('talk').send(service.makeParam(params));
+                    break;
+                case 'kakaostory':
+                    kakao&&kakao.link('story').send(service.makeParam(params));
+                    break;
+            }
+        }
+    };
+
+})(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
 
 (function($, core, ui, undefined) {
     "use strict";
@@ -7509,6 +7180,7 @@
         }
     };
 
+
     // 공통 UI와 관련하여 이벤트 정의
     core.GlobalUI = {
         init: function() {
@@ -7516,24 +7188,30 @@
 
             this.base();
             // TODO : 체크박스, 라디오박스가 스킨형을 사용하지 않음
-            //this.checkbox();
-            //this.radiobox();
             this.hover();
             this.modal();
-            this.windowPopup();
+            this.close();
             this.print();
             this.link();
             this.buttonPressed();
             this.checkAll();
-			this.sns();
+            this.sns();
         },
 
+        /**
+         * 탭, 커스텀셀렉트박스, 달력, 플레이스홀더, 아코디온 등의 공통 기능을 바인딩
+         */
         base: function() {
             // tab, selectbox, calendar, placeholder
             $doc.buildUIControls();
         },
 
+        /**
+         * 1. 버튼에 링크기능 바인딩(_self:현재창, _blank: 팝업, _modal: 모달레이어)
+         * 2. [data-control=toggle], .d-toggle에 해당하는 요소를 클릭했을 때 next에 있는 요소를 토글링해준다.(드롭다운 레이어)
+         */
         link: function(){
+            // 버튼에 링크기능 추가
             $doc.on("click.globalui", "[data-href]", function(e){
                 var $el = $(this),
                     href = $el.attr("data-href"),
@@ -7544,7 +7222,7 @@
                         window.location.assign(href);
                         break;
                     case "_blank":
-                        window.open(href, target, $el.attr('data-options'));
+                        window.open(href, target, $el.attr('data-options') || 'width=600, height=500, scrollbars=yes');
                         break;
                     case "_modal":
                         e.preventDefault();
@@ -7555,31 +7233,69 @@
                 }
             });
 
-            $doc.on('click.globalui', '[data-control=toggle]', function(e) {
-                e.preventDefault();
-                var $el = $(this),
-                    $target = $($el.attr('href'));
+            // 드롭다운 레이어 바인딩
+            $doc.on('click.globalui', '[data-control=toggle], .d-toggle', (function() {
+                var $layer = $(),
+                    $btn = $();
 
-                if($target.length === 0){
-                    $target = $($el.attr('data-target'));
+                function hideLayer() {
+                    $layer.addClass('none');
+                    $btn.removeClass('on');
+                    $doc.off('click.togglelayer');
+                }
+
+                function toggleLayer($el, $target) {
                     if($target.length === 0){ return; }
+                    if($target[0] != $layer[0]) { hideLayer(); }
+
+                    var isShow = !$target.hasClass('none');
+                    if(!isShow) {
+                        // 레이어영역 밖을 클릭했을 때 레이어가 닫히도록
+                        $doc.off('click.togglelayer').on('click.togglelayer', function(e) {
+                            if(($layer[0] !== e.target && !$.contains($layer[0], e.target)) || $(e.target).hasClass('d-close')) {
+                                e.preventDefault();
+                                hideLayer();
+                                $btn.focus();
+                            }
+                        });
+                    }
+                    $layer = $target.addClass('d-togglelayer').toggleClass('none', isShow);
+                    $btn = $el.toggleClass('on', !isShow);
+
+                    $layer.triggerHandler(isShow ? 'hidelayer' : 'showlayer');
                 }
-                var isShow = $target.is(':visible'),
-                    attr;
-                $target.toggle(!isShow);
-                if(attr = $el.attr('data-on-class')) {
-                    $el.toggleClass(attr, !isShow);
+
+                function toggleOn($el, $target) {
+                    $target.toggleClass('on');
                 }
-            });
+
+                return function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    var $el = $(this),
+                        target = $el.attr('data-target') || core.uri.removeHash($el.attr('href')),
+                        $target = target ? $( target ) : $el.next('div');
+
+                    if($el.attr('data-toggle-type') === 'on') {
+                        toggleOn($el, $target);
+                    } else {
+                        toggleLayer($el, $target);
+                    }
+                };
+            })());
         },
 
+        /**
+         * a 링크에 버튼눌림과 같은 효가를 주기 위해 마우스다운 시 active클래스를 추가, 마우스업 때 제거
+         */
         buttonPressed: function() {
             // 버튼 눌림효과
 
             // 터치디바이스에서는 무시함
-            if(!core.browser.isTouch){
-                return;
-            }
+            /*if(!core.browser.isOldIE){
+             return;
+             }*/
 
             // 버튼 pressed 효과
             $doc.on('mousedown.globalui mouseup.globalui mouseleave.globalui click.globalui', '.d-active', function(e) {
@@ -7600,9 +7316,12 @@
             });
         },
 
+        /**
+         * a 이외에 요소에 효버효과를 바인딩(ie하위버전에서 a이외에 :hover가 있으면 freezing 현상이 발생)
+         */
         hover: function() {
             // 터치디바이스에서는 무시함
-            if(!core.browser.isTouch){
+            if(core.browser.isTouch){
                 return;
             }
 
@@ -7616,15 +7335,8 @@
             });
         },
 
-        checkbox: function() {
-            // 체크박스
-            $doc.on('click.globalui', 'input:checkbox', function(e) {
-                $(this).parent().toggleClass('on', this.checked);
-            });
-        },
-
         /**
-         * 전체선택 체크박스
+         * 전체선택 체크박스(테이블 태그 내)
          *
          * @example
          */
@@ -7651,23 +7363,29 @@
             });
         },
 
-        radiobox: function() {
-            // 라디오박스
-            $doc.on('click.globalui', 'input:radio', function(e) {
-                $(this).closest('form')
-                    .find('input[name='+this.name+']')
-                    .parent().removeClass('on');
-                $(this).parent().addClass('on');
-            });
-        },
-
-        windowPopup: function(){
+        /**
+         * 1. 윈도우 창 닫기 기능 바인딩
+         * 2. 레이어 닫기
+         */
+        close: function(){
             //윈도우 창 닫기 기능
-            $doc.on("click.globalui", ".d-win-close", function(){
+            $doc.on("click.globalui", ".d-win-close", function(e){
+                e.preventDefault();
+
                 win.open('','_self').close();
             });
+
+            // 레이어 닫기
+            $doc.on("click.globalui", ".d-layer .d-close", function(e){
+                e.preventDefault();
+
+                $(this).closest('.d-layer').toggle( !$(this).closest('.d-layer').is(':visible') );
+            });
         },
 
+        /**
+         * 버튼에 d-print를 추가해주면 인쇄 기능이 바인딩
+         */
         print: function(){
             //인쇄 기능
             $doc.on("click.globalui", ".d-print", function(e) {
@@ -7682,6 +7400,9 @@
             });
         },
 
+        /**
+         * 버튼에 data-control=modal를 추가해줌으로써 next에 있는 div를 모달로 띄워준다.
+         */
         modal: function() {
             // 모달 띄우기
             $.fn.modal && $doc.on('click.globalui', '[data-control=modal]', function(e) {
@@ -7717,32 +7438,35 @@
             });
         },
 
-		sns: function() {
-			$doc.on('click.globalui', '.d-sns-share', function(e) {
-				e.preventDefault();
+        sns: function() {
+            var types = core.object.keys(core.sns.types);
 
-				var $el = $(this),
-					url = $el.attr('href') || $el.attr('data-url') || location.href,
-					title = $el.attr('data-title') || document.title,
-					desc = $el.attr('data-desc') || document.desc,
-					service = $el.attr('data-service');
-				
-				if(!service){
-					core.each(core.sns.supports, function(name) {
-						if($el.hasClass('d-'+name)) {
-							service = name;
-							return false;
-						}
-					});
-					if(!service) {
-						alert('공유할 SNS타입을 지정해주세요.');
-						return;
-					}
-				}
-			
-				core.sns.share(service, {url: url, title:title, desc: desc});
-			});
-		}
+            $doc.on('click.globalui', core.array.map(types, function(val) { return '.d-'+val; }).join(', '), function(e) {
+                e.preventDefault();
+
+                var $el = $(this),
+                    url = $el.attr('href') || $el.attr('data-url') || location.href,
+                    title = $el.attr('data-title') || document.title,
+                    desc = $el.attr('data-desc') || $('head meta[property$=description]').attr('content') || $('head meta[name=description]').attr('content') || '',
+                    image = $el.attr('data-image') || $('head meta[property$=image]').attr('content') || '',
+                    service = $el.attr('data-service');
+
+                if(!service){
+                    core.each(types, function(name) {
+                        if($el.hasClass('d-'+name)) {
+                            service = name;
+                            return false;
+                        }
+                    });
+                    if(!service) {
+                        alert('공유할 SNS타입을 지정해주세요.');
+                        return;
+                    }
+                }
+
+                core.sns.share(service, {url: url, title:title, desc: desc, image: image});
+            });
+        }
     };
 
 })(jQuery, window[LIB_NAME], window[LIB_NAME].ui);
@@ -7764,7 +7488,7 @@
                 // 해당 모달창의 크기를 컨텐츠 사이즈에 맞게 재조절
                 setTimeout(function() {
                     // 현재 표시 되고 있는 모달창의 사이즈를 재조절
-                    core.PubSub.trigger('resize:modal');
+                    core.PubSub.trigger('resize:modal'); // ui.Modal 모듈코드 참조
                 }, 100);
             }
         }
@@ -7777,32 +7501,65 @@
         header: false,
         template: {
             button: [
-                '<span class="d-calendar-day" title="<%-title%>">',
-                '<%if(isHoliday){%>',
+                '<span class="m-calendar-day" title="<$-title$>">',
+                '<$if(isHoliday){$>',
                 '<span class="hide">휴점일</span>',
-                '<%} if(isToday){%>',
+                '<$} if(isToday){$>',
                 '<span class="hide">오늘</span>',
-                '<%}%>',
-                '<a href="#"><%=day%></a>',
+                '<$}$>',
+                '<a href="#" aria-describedby="d-<$-jCore.date.format(date, \'yyyyMMdd\')$>"><$=day$></a>',
                 '</span>'].join(''),
-			label: [
-				'<span class="d-calendar-day" title="<%-title%>">',
-				'<%if(isHoliday){%>',
-				'<span class="hide">휴점일</span>',
-				'<%} if(isToday){%>',
-				'<span class="hide">오늘</span>',
-				'<%}%>',
-				'<em><%=day%></em>',
-				'</span>'].join('')
+            label: [
+                '<span class="m-calendar-day" title="<$-title$>">',
+                '<$if(isHoliday){$>',
+                '<span class="hide">휴점일</span>',
+                '<$} if(isToday){$>',
+                '<span class="hide">오늘</span>',
+                '<$}$>',
+                '<em><$=day$></em>',
+                '</span>'].join('')
         }
     });
 
-	core.isTouch && ui.setDefaults('AccordionList', {
-		isMoveTop: true
-	});
+    core.browser.isTouch && ui.setDefaults('AccordionList', {
+        isMoveTop: true,
+        isSlideType: true,
+        slideTime: 300,
+        foldOthers: false
+    });
 
-	core.sns.makeShortUrl = 'http://www.hanulo.com/short_url.php?url='
+    if(core.browser.isIOS) {
+        /*
+         * IOS6 Button highlight fix
+         */
+        window.addEventListener( 'load', function() {
+            var body = document.getElementsByTagName( 'body' )[ 0 ];
+            body.addEventListener( 'click', function( event ) {
+                var target = event.target,
+                    tag = undefined,
+                    type = undefined;
 
+                while (target && target !== body) {
+                    tag = target.tagName.toLowerCase();
+                    type = tag === 'input' ? target.type.toLowerCase() : '';
+
+                    if ( tag === 'button' || ( tag === 'input' && ( type === 'button' || type === 'submit' || type === 'image' ) ) ) {
+                        (function() {
+                            var a, b;
+                            b = a = new Date();
+                            while ( ( a.getTime() - b.getTime() ) < 100 ) {
+                                a = new Date();
+                            }
+                        })();
+                        break;
+                    }
+
+                    target = target.parentNode;
+                }
+            }, false);
+        }, false);
+
+    }
 
     $(function() {
         core.GlobalUI.init();
