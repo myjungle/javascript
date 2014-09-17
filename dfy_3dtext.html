@@ -1,0 +1,85 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<title> CSS3 3D Text </title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+<style>
+
+body { font-family:'Helvetica Neue',Arial,Helvetica,'Liberation Sans','맑은 고딕','Malgun Gothic','나눔고딕','돋움',dotum; font-size:50px; color:#fff; line-height:1.2em; margin:0; padding:0; background:#000; overflow:hidden; }
+
+#box { position:absolute; left:50%; top:50%; width:100%; height:1.2em; margin:-0.6em 0 0 -50%; -webkit-perspective:450; }
+#box div { position:absolute; left:0; top:0; width:100%; height:1.2em; -webkit-transform-style:preserve-3d; -webkit-animation:rotation 5s linear infinite; }
+#box textarea, #box p { position:absolute; width:100%; height:1.2em; font:inherit; font-weight:bold; color:inherit; text-align:center; text-transform:uppercase; margin:0; padding:0; border:0; background:inherit; overflow:hidden; }
+#box textarea { background:#222; outline:none; resize:none; -webkit-appearance:none; opacity:0; }
+#box textarea:focus { opacity:0.5; }
+#box p { text-shadow:0 0 1px #555; pointer-events:none; }
+
+@-webkit-keyframes rotation{
+	100% { -webkit-transform:rotateY(360deg); }
+}
+
+#notwebkit { position:absolute; left:0; top:50%; width:100%; color:#fff; text-align:center; margin:-0.6em 0 0; }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="box"><div><textarea spellcheck="false" >psyonline</textarea><p></p></div></div>
+
+<script>
+
+(function(){
+
+	var box=document.getElementById('box');
+
+	//apple webkit only
+	if(!(/applewebkit/i).test(navigator.userAgent)){
+		document.body.removeChild(box);
+		box=document.createElement('p');
+		box.id='notwebkit';
+		box.innerHTML='Webkit browser only :(';
+		document.body.appendChild(box);
+		return;
+	}
+
+	var i, max, clone, z, clones=[], depth=10;
+	var rotator=box.childNodes[0], textarea=rotator.childNodes[0], p=rotator.childNodes[1];
+
+	function copy(e){
+
+		for(i=0, max=clones.length; i<max; i++){
+			rotator.removeChild(clones[i]);
+		}
+
+		clones=[];
+
+		p.innerHTML=textarea.value;
+
+		for(i=0, max=depth*2; i<max; i++){
+			z=(i-depth)/2;
+			if(z){
+				clone=p.cloneNode(true);
+				clone.style.webkitTransform='translateZ('+(z)+'px)';
+				rotator.appendChild(clone);
+				clones.push(clone);
+			}
+		}
+
+	}
+
+	textarea.addEventListener('keyup', copy);
+
+	copy();
+
+
+})();
+
+</script>
+
+</body>
+</html>
