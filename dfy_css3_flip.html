@@ -1,0 +1,211 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<title> CSS3 Flip </title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+<style>
+
+body { font-family:arial; font-size:50px; color:#000; line-height:1em; margin:0; padding:0; background:#000; }
+
+#container { position:absolute; left:50%; top:50%; width:400px; height:360px; margin:-175px 0 0 -200px; }
+
+#book { position:absolute; left:0; top:0; width:400px; height:300px; margin:0; padding:0; border-radius:7px; background:#222; box-shadow:0 0 4px #777; z-index:1; -webkit-perspective:600; -webkit-transform-style:preserve-3d; }
+#book li { position:absolute; left:0; top:0; width:400px; height:300px; list-style:none; margin:0; padding:0; -webkit-animation-duration:0.35s; -webkit-animation-fill-mode:forwards; }
+#book li p { position:absolute; left:200px; top:0; width:187px; height:60px; text-align:right; margin:0; padding:240px 13px 0 0; border-radius:0 7px 7px 0; background:-webkit-linear-gradient(left, rgba(201,201,201,1) 0%,rgba(232,232,232,1) 6%,rgba(244,244,244,1) 12%,rgba(255,255,255,1) 100%); }
+#book li.backface { color:#ccc; }
+
+#navigator { position:absolute; left:0; top:320px; width:400px; font-size:18px; text-align:center; line-height:1em; margin:0; padding:0; }
+#navigator a { width:32px; height:25px; color:#555; text-decoration:none; text-shadow:0 -1px 0 #000; margin-right:1px; padding:6px 1px 0 0; background:-webkit-linear-gradient(top, rgba(28,28,28,1) 0%, rgba(12,12,12,1) 100%); display:inline-block; overflow:hidden; -webkit-transition:all 0.2s; }
+#navigator a:first-child { border-radius:5px 0 0 5px; }
+#navigator a:last-child { margin:0; border-radius:0 5px 5px 0; }
+#navigator a:hover { color:#fff; text-shadow:0 0 15px rgba(255, 255, 255, 0.5); }
+#navigator a.on { color:#fff; text-shadow:0 -1px 0 #000, 0 0 15px rgba(255, 255, 255, 0.75); background:-webkit-linear-gradient(top, rgba(50,50,50,1) 0%, rgba(15,15,15,1) 100%); }
+
+@-webkit-keyframes flip-f-step1{
+	to { -webkit-transform:rotateY(-90deg); }
+}
+@-webkit-keyframes flip-f-step2{
+	from { -webkit-transform:rotateY(-90deg); }
+	to { -webkit-transform:rotateY(-179.99deg); }
+}
+
+@-webkit-keyframes flip-p-step1{
+	from { -webkit-transform:rotateY(-180deg); }
+	to { -webkit-transform:rotateY(-90deg); }
+}
+@-webkit-keyframes flip-p-step2{
+	from { -webkit-transform:rotateY(-90deg); }
+	to { -webkit-transform:rotateY(0deg); }
+}
+
+#notwebkit { position:absolute; left:0; top:50%; width:100%; color:#fff; text-align:center; margin-top:-0.5em; }
+
+</style>
+
+</head>
+
+<body>
+
+<div id="container">
+	<ul id="book"></ul>
+	<p id="navigator"></p>
+</div>
+
+<script>
+
+(function(){
+
+	var container=document.getElementById('container');
+	var book=document.getElementById('book');
+	var navi=document.getElementById('navigator');
+
+	//apple webkit only
+	if(!(/applewebkit/i).test(navigator.userAgent)){
+		document.body.removeChild(book);
+		document.body.removeChild(navi);
+		container=document.createElement('p');
+		container.id='notwebkit';
+		container.innerHTML='Webkit browser only :(';
+		document.body.appendChild(container);
+		return;
+	}
+
+	var i, j, pages, navibuttons, movepages, movedpages, now=0, max=10, pagehtml=[], navihtml=[], clickable=true;
+
+	//html 생성.
+	for(i=0; i<max; i++){
+
+		pagehtml.push('<li><p>');
+		pagehtml.push(i+1);
+		pagehtml.push('</li></p>');
+
+		navihtml.push('<a href="#page');
+		navihtml.push(i+1);
+		navihtml.push('">');
+		navihtml.push(i+1);
+		navihtml.push('</a>');
+
+	}
+
+	//page html 추가. dataset, event 지정.
+	book.innerHTML=pagehtml.join('');
+	pages=book.getElementsByTagName('li');
+	for(i=0; i<max; i++){
+		pages[i].dataset.zindex1=i;
+		pages[i].dataset.zindex2=pages[i].style.zIndex=max-i;
+		pages[i].addEventListener('webkitAnimationEnd', fliping);
+	}
+
+	//navigator html 추가. dataset, event 지정.
+	navi.innerHTML=navihtml.join('');
+	navibuttons=navi.getElementsByTagName('a');
+	for(i=0, max=pages.length; i<max; i++){
+		if(!i){
+			navibuttons[i].className='on';
+		}
+		navibuttons[i].dataset.no=i;
+		navibuttons[i].addEventListener('click', gopage);
+	}
+
+	//flip. 파라미터 page로 이동.
+	//page가 90도를 넘겼을 때 z-index 처리 및 backface효과를 위해 animation keyframes를 2개의 step으로 구분.
+	//step 1을 우선 지정.
+	function flip(page){
+
+		if(page==now){
+			return;
+		}
+
+		if(page>now){
+			for(i=now, j=0; i<page; i++, j++){
+				pages[i].style.webkitTransform='rotateY(0deg)';
+				setanimation(pages[i], 'flip-f-step1', 0.1*j, 'ease-in', 1);
+			}
+		}else{
+			for(i=now, j=0; i>page; i--, j++){
+				pages[i-1].style.webkitTransform='rotateY(-180deg)';
+				setanimation(pages[i-1], 'flip-p-step1', 0.1*j, 'ease-in', 1);
+			}
+		}
+
+		movepages=Math.abs(page-now);
+		movedpages=0;
+		now=page;
+
+		clickable=false;
+
+	}
+
+	//webkitAnimationEnd event 발생시 step 2를 실행.
+	function fliping(){
+
+		if(parseInt(this.dataset.step)==1){
+
+			if((/\-f/).test(this.dataset.animationname)){
+				this.className='backface';
+				this.style.zIndex=this.dataset.zindex1;
+			}else{
+				this.className='';
+				this.style.zIndex=this.dataset.zindex2;
+			}
+
+			setanimation(this, this.dataset.animationname.replace('1', '2'), 0, 'ease-out', 2);
+
+		}else{
+
+			movedpages++;
+
+			if(movepages==movedpages){
+				clickable=true;
+			}
+
+		}
+
+	}
+
+	//navigator click.
+	function gopage(e){
+
+		var no;
+
+		if(clickable){
+			no=parseInt(this.dataset.no);
+			for(i=0; i<max; i++){
+				navibuttons[i].className=(i==no)? 'on' :'';
+			}
+			flip(no);
+		}
+
+		e.returnValue=false;
+
+	}
+
+	//animation 지정.
+	function setanimation(page, name, delay, timingfunction, step){
+
+		page.dataset.step=step;
+		page.style.webkitAnimationDelay=delay+'s';
+		page.style.webkitAnimationTimingFunction=timingfunction;
+		page.dataset.animationname=page.style.webkitAnimationName=name;
+
+	}
+
+	//작은 화면일 경우 축소
+	function resize(){
+		var rate=Math.min(window.innerWidth/460, window.innerHeight/400);
+		var scale=(1>rate)? rate : 1;
+		container.style.webkitTransform='scale('+scale+', '+scale+')';
+	}
+	window.addEventListener('resize', resize);
+
+	resize();
+
+})();
+
+</script>
+
+</body>
+</html>
